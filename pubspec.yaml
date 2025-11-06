@@ -1,7 +1,7 @@
 name: itonatalaga
 description: "A new Flutter project."
 publish_to: 'none'
-version: 0.1.0
+version: 1.0.0+1
 
 environment:
   sdk: ^3.5.3
@@ -10,7 +10,7 @@ dependencies:
   flutter:
     sdk: flutter
   google_fonts: ^6.2.1
-  audioplayers: ^6.0.0
+  just_audio: ^0.9.39
 
 
 dev_dependencies:
@@ -22,11 +22,13 @@ flutter:
   uses-material-design: true
   assets:
     - assets/house.png
-    - assets/activity1.png
-    - assets/activity2.png
     - assets/activity3.png
     - assets/activity4.png
     - assets/opening.mp3
+    - assets/activity1.gif
+    - assets/music/
+    - assets/album-cover/
+    - assets/activity2/
   fonts:
       - family: PlayfairDisplay
         fonts:

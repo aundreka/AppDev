@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:audioplayers/audioplayers.dart';
+import 'package:just_audio/just_audio.dart';
 import '../styles.dart';
 
 class HomePage extends StatefulWidget {
@@ -24,30 +24,44 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   late final AudioPlayer _bgm;
   bool _muted = false;
 
+  // Precompute light particle field once (no per-frame RNG)
+  final List<_Particle> _particles = [];
+
   @override
   void initState() {
     super.initState();
-    _intro = AnimationController(vsync: this, duration: const Duration(milliseconds: 1800));
+
+    _intro = AnimationController(vsync: this, duration: const Duration(milliseconds: 1600));
     _titleFade = CurvedAnimation(parent: _intro, curve: const Interval(0.0, 0.65, curve: Curves.easeOut));
-    _titleScale = Tween(begin: 0.88, end: 1.0).animate(
+    _titleScale = Tween(begin: 0.9, end: 1.0).animate(
       CurvedAnimation(parent: _intro, curve: const Interval(0.0, 0.65, curve: Curves.elasticOut)),
     );
     _houseRise = CurvedAnimation(parent: _intro, curve: const Interval(0.25, 1.0, curve: Curves.easeOutCubic));
 
-    _clouds = AnimationController(vsync: this, duration: const Duration(seconds: 20))..repeat();
-    _grassWind = AnimationController(vsync: this, duration: const Duration(seconds: 3))..repeat();
-    _titleGlow = AnimationController(vsync: this, duration: const Duration(seconds: 4))..repeat();
+    // Slightly slower loops -> fewer visual changes per second
+    _clouds = AnimationController(vsync: this, duration: const Duration(seconds: 28))..repeat();
+    _grassWind = AnimationController(vsync: this, duration: const Duration(seconds: 4))..repeat();
+    _titleGlow = AnimationController(vsync: this, duration: const Duration(seconds: 3))..repeat();
     _buttonFloat = AnimationController(vsync: this, duration: const Duration(seconds: 2))..repeat();
 
     _glowIntensity = Tween(begin: 0.3, end: 0.8).animate(CurvedAnimation(parent: _titleGlow, curve: Curves.easeInOut));
     _floatAnimation = Tween(begin: -3.0, end: 3.0).animate(CurvedAnimation(parent: _buttonFloat, curve: Curves.easeInOut));
 
-    WidgetsBinding.instance.addPostFrameCallback((_) => _intro.forward());
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      _intro.forward();
 
+      // Precaching avoids jank the first time these draw
+      final ctx = context;
+      precacheImage(const AssetImage('assets/house.png'), ctx);
+      precacheImage(const AssetImage('assets/opening.mp3'), ctx); // harmless if not an image
+    });
+
+    // Background music
     _bgm = AudioPlayer();
-    _bgm.setReleaseMode(ReleaseMode.loop);
+    _unawaited(_bgm.setAudioSource(AudioSource.asset('assets/opening.mp3')));
+    _unawaited(_bgm.setLoopMode(LoopMode.one));
     _unawaited(_bgm.setVolume(0.25));
-    _unawaited(_bgm.play(AssetSource('opening.mp3')));
+    _unawaited(_bgm.play());
   }
 
   @override
@@ -67,36 +81,59 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     final isNarrow = size.width < 900;
     final horizonY = size.height * (isNarrow ? 0.53 : 0.55);
 
+    // Prepare particle field sized to screen only once
+    if (_particles.isEmpty) {
+      final rng = math.Random(42);
+      final count = size.width < 500 ? 16 : 24; // fewer on phones
+      for (int i = 0; i < count; i++) {
+        _particles.add(
+          _Particle(
+            x: rng.nextDouble() * size.width,
+            y: rng.nextDouble() * size.height * 0.6,
+            r: 0.6 + rng.nextDouble() * 1.2,
+            drift: 10 + rng.nextDouble() * 18,
+          ),
+        );
+      }
+    }
+
     return Scaffold(
       backgroundColor: AppColors.red,
       body: Stack(
         children: [
           Positioned.fill(child: DecoratedBox(decoration: AppDecorations.sky())),
 
-          AnimatedBuilder(
-            animation: _clouds,
-            builder: (_, __) => _AtmosphericParticles(progress: _clouds.value, screenSize: size),
+          // Particles: extremely light now, only paints tiny circles
+          RepaintBoundary(
+            child: AnimatedBuilder(
+              animation: _clouds,
+              builder: (_, __) => _AtmosphericParticles(progress: _clouds.value, particles: _particles, screenSize: size),
+            ),
           ),
 
+          // Grass: painter complexity reduced & isolated
           Positioned(
             left: 0,
             right: 0,
             top: horizonY - (isNarrow ? 70 : 50),
-            height: isNarrow ? 160 : 140,
+            height: isNarrow ? 150 : 135,
             child: IgnorePointer(
-              child: AnimatedBuilder(
-                animation: _grassWind,
-                builder: (_, __) => CustomPaint(
-                  painter: _RealisticGrassPainter(
-                    windPhase: _grassWind.value * 2 * math.pi,
-                    screenWidth: size.width,
-                    densityBoost: isNarrow ? 1.6 : 1.3,
+              child: RepaintBoundary(
+                child: AnimatedBuilder(
+                  animation: _grassWind,
+                  builder: (_, __) => CustomPaint(
+                    painter: _GrassLitePainter(
+                      windPhase: _grassWind.value * 2 * math.pi,
+                      screenWidth: size.width,
+                      densityBoost: isNarrow ? 1.3 : 1.1,
+                    ),
                   ),
                 ),
               ),
             ),
           ),
 
+          // House + ground shadow
           Align(
             alignment: Alignment(0, isNarrow ? 0.20 : 0.16),
             child: AnimatedBuilder(
@@ -104,6 +141,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               builder: (_, __) {
                 final rise = lerpDouble(80, 0, _houseRise.value)!;
                 final opacity = CurvedAnimation(parent: _intro, curve: const Interval(0.35, 1.0, curve: Curves.easeOut)).value;
+                final houseW = math.min(size.width * 0.9, 1600.0); // downscale target to avoid huge textures
+
                 return Opacity(
                   opacity: opacity,
                   child: Transform.translate(
@@ -113,17 +152,19 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                       children: [
                         IgnorePointer(
                           child: Container(
-                            margin: EdgeInsets.only(top: isNarrow ? 220 : 270),
+                            margin: EdgeInsets.only(top: isNarrow ? 200 : 250),
                             width: math.min(size.width * 0.7, 800),
-                            height: isNarrow ? 40 : 50,
+                            height: isNarrow ? 36 : 44,
                             decoration: AppDecorations.groundShadowEllipse(),
                           ),
                         ),
+                        // Downscale decode with cacheWidth to reduce GPU upload size
                         Image.asset(
                           'assets/house.png',
                           fit: BoxFit.contain,
-                          filterQuality: FilterQuality.high,
-                          width: math.min(size.width * 0.9, 2000),
+                          filterQuality: FilterQuality.medium,
+                          cacheWidth: (houseW).round(),
+                          width: houseW,
                         ),
                       ],
                     ),
@@ -133,6 +174,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             ),
           ),
 
+          // Floating buttons (unchanged visuals)
           Align(
             alignment: const Alignment(0, 0.88),
             child: AnimatedBuilder(
@@ -141,19 +183,50 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 offset: Offset(0, _floatAnimation.value),
                 child: Wrap(
                   alignment: WrapAlignment.center,
+                  runAlignment: WrapAlignment.center,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   spacing: 32,
                   runSpacing: 20,
-                  children: const [
-                    _EnhancedPillButton(label: 'Activity 1', route: '/a1', delay: 0, base: Color(0xFF5C0B0B), glow: Color(0xFFFF5A5A)),
-                    _EnhancedPillButton(label: 'Activity 2', route: '/a2', delay: 0.25, base: Color(0xFF4A0C14), glow: Color(0xFFFF7A5A)),
-                    _EnhancedPillButton(label: 'Activity 3', route: '/a3', delay: 0.5, base: Color(0xFF3B0E1C), glow: Color(0xFFFF9A6A)),
-                    _EnhancedPillButton(label: 'Activity 4', route: '/a4', delay: 0.75, base: Color(0xFF2D1024), glow: Color(0xFFFFBA7A)),
+                  children: [
+                    _EnhancedPillButton(
+                      label: 'Activity 1',
+                      route: '/a1',
+                      delay: 0,
+                      base: const Color(0xFF5C0B0B),
+                      glow: const Color(0xFFFF5A5A),
+                      beforeNav: () { try { _bgm.stop(); } catch (_) {} },
+                    ),
+                    _EnhancedPillButton(
+                      label: 'Activity 2',
+                      route: '/a2',
+                      delay: 0.25,
+                      base: const Color(0xFF4A0C14),
+                      glow: const Color(0xFFFF7A5A),
+                      beforeNav: () { try { _bgm.stop(); } catch (_) {} },
+                    ),
+                    _EnhancedPillButton(
+                      label: 'Activity 3',
+                      route: '/a3',
+                      delay: 0.5,
+                      base: const Color(0xFF3B0E1C),
+                      glow: const Color(0xFFFF9A6A),
+                      beforeNav: () { try { _bgm.stop(); } catch (_) {} },
+                    ),
+                    _EnhancedPillButton(
+                      label: 'Activity 4',
+                      route: '/a4',
+                      delay: 0.75,
+                      base: const Color(0xFF2D1024),
+                      glow: const Color(0xFFFFBA7A),
+                      beforeNav: () { try { _bgm.stop(); } catch (_) {} },
+                    ),
                   ],
                 ),
               ),
             ),
           ),
 
+          // Title stack
           Positioned.fill(
             child: IgnorePointer(
               child: Column(
@@ -177,6 +250,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             ),
           ),
 
+          // Side Japanese text (glow anim only affects opacity -> cheap)
           Align(
             alignment: isNarrow ? const Alignment(-0.96, -0.82) : const Alignment(-0.78, -0.75),
             child: AnimatedBuilder(
@@ -203,6 +277,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             ),
           ),
 
+          // Mute button
           Positioned(
             right: 14,
             top: 14,
@@ -215,12 +290,15 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             ),
           ),
 
-          AnimatedBuilder(
-            animation: _clouds,
-            builder: (_, __) => _RealisticCloudShadow(
-              progress: _clouds.value,
-              topFraction: isNarrow ? 0.13 : 0.18,
-              screenSize: size,
+          // Cloud shadow (lightweight gradient ovals, isolated)
+          RepaintBoundary(
+            child: AnimatedBuilder(
+              animation: _clouds,
+              builder: (_, __) => _CloudShadowLite(
+                progress: _clouds.value,
+                topFraction: isNarrow ? 0.13 : 0.18,
+                screenSize: size,
+              ),
             ),
           ),
         ],
@@ -231,45 +309,66 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
 void _unawaited(Future<void> f) {}
 
+/// ------------------------------------------------------------
+/// Lightweight particles (precomputed)
+/// ------------------------------------------------------------
+class _Particle {
+  final double x, y, r, drift;
+  const _Particle({required this.x, required this.y, required this.r, required this.drift});
+}
+
 class _AtmosphericParticles extends StatelessWidget {
   final double progress;
   final Size screenSize;
-  const _AtmosphericParticles({required this.progress, required this.screenSize});
+  final List<_Particle> particles;
+  const _AtmosphericParticles({
+    required this.progress,
+    required this.particles,
+    required this.screenSize,
+    super.key,
+  });
   @override
   Widget build(BuildContext context) {
-    return IgnorePointer(child: CustomPaint(size: screenSize, painter: _ParticlesPainter(progress: progress)));
+    return IgnorePointer(
+      child: CustomPaint(
+        size: screenSize,
+        painter: _ParticlesPainter(progress: progress, particles: particles),
+      ),
+    );
   }
 }
 
 class _ParticlesPainter extends CustomPainter {
   final double progress;
-  _ParticlesPainter({required this.progress});
+  final List<_Particle> particles;
+  _ParticlesPainter({required this.progress, required this.particles});
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = Colors.white.withOpacity(0.1);
-    final rng = math.Random(42);
-    for (int i = 0; i < 36; i++) {
-      final x = (rng.nextDouble() * size.width + progress * 20) % size.width;
-      final y = rng.nextDouble() * size.height * 0.6;
-      final radius = 0.5 + rng.nextDouble() * 1.5;
-      canvas.drawCircle(Offset(x, y), radius, paint);
+    final paint = Paint()..color = Colors.white.withOpacity(0.10);
+    for (final p in particles) {
+      // simple horizontal drift
+      final x = (p.x + progress * p.drift) % size.width;
+      canvas.drawCircle(Offset(x, p.y), p.r, paint);
     }
   }
   @override
-  bool shouldRepaint(covariant _ParticlesPainter oldDelegate) => oldDelegate.progress != progress;
+  bool shouldRepaint(covariant _ParticlesPainter old) => old.progress != progress || old.particles != particles;
 }
 
-class _RealisticCloudShadow extends StatelessWidget {
+/// ------------------------------------------------------------
+/// Cloud shadow (gradient blobs, no expensive MaskFilter blur)
+/// ------------------------------------------------------------
+class _CloudShadowLite extends StatelessWidget {
   final double progress;
   final double topFraction;
   final Size screenSize;
-  const _RealisticCloudShadow({required this.progress, required this.topFraction, required this.screenSize});
+  const _CloudShadowLite({required this.progress, required this.topFraction, required this.screenSize, super.key});
 
   @override
   Widget build(BuildContext context) {
-    final travelLeft = lerpDouble(-0.8 * screenSize.width, 1.3 * screenSize.width, progress)!;
-    final width = math.max(screenSize.width * 1.8, 1600.0);
-    final height = screenSize.height * 1.6;
+    final travelLeft = lerpDouble(-0.6 * screenSize.width, 1.2 * screenSize.width, progress)!;
+    final width = math.max(screenSize.width * 1.5, 1200.0);
+    final height = screenSize.height * 1.3;
     final top = screenSize.height * topFraction - height * 0.35;
 
     return Positioned(
@@ -279,93 +378,91 @@ class _RealisticCloudShadow extends StatelessWidget {
         child: SizedBox(
           width: width,
           height: height,
-          child: CustomPaint(painter: _RealisticCloudShadowPainter()),
+          child: CustomPaint(painter: _CloudShadowLitePainter()),
         ),
       ),
     );
   }
 }
 
-class _RealisticCloudShadowPainter extends CustomPainter {
+class _CloudShadowLitePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final w = size.width;
-    final h = size.height;
+    final w = size.width, h = size.height;
 
-    final shadowPaint = Paint()
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 45)
-      ..color = Colors.black.withOpacity(0.35);
+    Paint oval(Color c, double a) => Paint()
+      ..shader = RadialGradient(
+        colors: [c.withOpacity(a), c.withOpacity(0)],
+        stops: const [0.0, 1.0],
+      ).createShader(Rect.fromCircle(center: Offset(0, 0), radius: 1)); // shader updated per oval
 
-    final denseShadowPaint = Paint()
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 30)
-      ..color = Colors.black.withOpacity(0.28);
-
-    void blob(double x, double y, double bw, double bh, Paint p) {
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(Rect.fromLTWH(x, y, bw, bh), Radius.circular(bh * 0.4)),
-        p,
-      );
+    void drawOval(Offset center, Size s, Color color, double alpha) {
+      final rect = Rect.fromCenter(center: center, width: s.width, height: s.height);
+      final paint = Paint()
+        ..shader = RadialGradient(
+          colors: [color.withOpacity(alpha), color.withOpacity(0)],
+          stops: const [0.0, 1.0],
+        ).createShader(rect);
+      canvas.drawOval(rect, paint);
     }
 
-    blob(w * 0.05, h * 0.15, w * 0.40, h * 0.40, shadowPaint);    
-    blob(w * 0.55, h * 0.20, w * 0.48, h * 0.48, denseShadowPaint); 
-    blob(w * 1.05, h * 0.18, w * 0.50, h * 0.50, shadowPaint);     
+    drawOval(Offset(w * 0.15, h * 0.20), Size(w * 0.55, h * 0.50), Colors.black, 0.25);
+    drawOval(Offset(w * 0.60, h * 0.25), Size(w * 0.60, h * 0.56), Colors.black, 0.22);
+    drawOval(Offset(w * 1.05, h * 0.23), Size(w * 0.62, h * 0.58), Colors.black, 0.22);
 
-
-    blob(w * 0.20, h * 0.55, w * 0.30, h * 0.24, Paint()
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 50)
-      ..color = Colors.black.withOpacity(0.15));
-    blob(w * 0.70, h * 0.60, w * 0.32, h * 0.24, Paint()
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 50)
-      ..color = Colors.black.withOpacity(0.15));
+    drawOval(Offset(w * 0.30, h * 0.65), Size(w * 0.32, h * 0.24), Colors.black, 0.12);
+    drawOval(Offset(w * 0.75, h * 0.68), Size(w * 0.34, h * 0.24), Colors.black, 0.12);
   }
 
   @override
-  bool shouldRepaint(covariant _RealisticCloudShadowPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _CloudShadowLitePainter oldDelegate) => false;
 }
 
-
-class _RealisticGrassPainter extends CustomPainter {
+/// ------------------------------------------------------------
+/// Grass (lighter painter)
+/// ------------------------------------------------------------
+class _GrassLitePainter extends CustomPainter {
   final double windPhase;
   final double screenWidth;
   final double densityBoost;
   static const Color _grassBack = Color(0xFF1A1A1A);
   static const Color _grassMid = Color(0xFF0F0F0F);
   static const Color _grassFront = Color(0xFF000000);
-  _RealisticGrassPainter({required this.windPhase, required this.screenWidth, this.densityBoost = 1.0});
+  _GrassLitePainter({required this.windPhase, required this.screenWidth, this.densityBoost = 1.0});
+
   @override
   void paint(Canvas canvas, Size size) {
-    _paintGrassLayer(canvas, size, 0, _grassBack, 1.05, 2.8 * densityBoost);
-    _paintGrassLayer(canvas, size, 1, _grassMid, 1.25, 2.4 * densityBoost);
-    _paintGrassLayer(canvas, size, 2, _grassFront, 1.45, 2.2 * densityBoost);
+    _paintLayer(canvas, size, 0, _grassBack, 1.00, 2.0 * densityBoost);
+    _paintLayer(canvas, size, 1, _grassMid, 1.18, 1.8 * densityBoost);
+    _paintLayer(canvas, size, 2, _grassFront, 1.34, 1.6 * densityBoost);
   }
 
-  void _paintGrassLayer(Canvas canvas, Size size, int layerIndex, Color baseColor, double heightMultiplier, double densityMultiplier) {
-    final rng = math.Random(layerIndex * 23 + 17);
+  void _paintLayer(Canvas canvas, Size size, int layer, Color base, double heightMul, double densityMul) {
+    final rng = math.Random(13 * layer + 7);
     final baseY = size.height;
-    final step = 5.0 / densityMultiplier;
-    for (double x = -60; x < size.width + 60; x += step + rng.nextDouble() * 2.4) {
-      if (rng.nextDouble() < 0.12) continue;
-      final clumpSize = 2 + rng.nextInt(5);
-      for (int blade = 0; blade < clumpSize; blade++) {
-        final bladeX = x + (blade - clumpSize / 2) * (1.2 + rng.nextDouble() * 1.8);
-        _paintGrassBlade(canvas, size, rng, bladeX, baseY, baseColor, heightMultiplier, layerIndex);
+    final step = 7.0 / densityMul; // bigger step => fewer blades
+    for (double x = -60; x < size.width + 60; x += step + rng.nextDouble() * 2.0) {
+      if (rng.nextDouble() < 0.16) continue; // sparser
+      final clump = 2 + rng.nextInt(4);
+      for (int i = 0; i < clump; i++) {
+        final bladeX = x + (i - clump / 2) * (1.2 + rng.nextDouble() * 1.4);
+        _blade(canvas, size, rng, bladeX, baseY, base, heightMul, layer);
       }
     }
   }
 
-  void _paintGrassBlade(Canvas canvas, Size size, math.Random rng, double x, double baseY, Color baseColor, double heightMultiplier, int layerIndex) {
-    final height = (28 + rng.nextDouble() * 52) * heightMultiplier;
-    final width = 1.8 + rng.nextDouble() * 2.6;
-    final windStrength = 0.45 + layerIndex * 0.28;
-    final windOffset = math.sin(windPhase + x * 0.008) * windStrength * (height / 35);
+  void _blade(Canvas canvas, Size size, math.Random rng, double x, double baseY, Color base, double heightMul, int layer) {
+    final height = (24 + rng.nextDouble() * 44) * heightMul;
+    final width = 1.6 + rng.nextDouble() * 2.2;
+    final windStrength = 0.42 + layer * 0.25;
+    final windOffset = math.sin(windPhase + x * 0.008) * windStrength * (height / 36);
     final colorVariation = rng.nextDouble() * 0.2 - 0.1;
-    final grassColor = Color.lerp(baseColor, colorVariation > 0 ? const Color(0xFF2A2A2A) : const Color(0xFF000000), colorVariation.abs())!;
+    final grassColor = Color.lerp(base, colorVariation > 0 ? const Color(0xFF2A2A2A) : const Color(0xFF000000), colorVariation.abs())!;
     final paint = Paint()..color = grassColor;
 
     final path = Path();
     path.moveTo(x - width / 2, baseY);
-    const segments = 5;
+    const segments = 4; // fewer segments => cheaper path
     for (int i = 1; i <= segments; i++) {
       final t = i / segments;
       final y = baseY - height * t;
@@ -386,37 +483,30 @@ class _RealisticGrassPainter extends CustomPainter {
     }
     path.close();
     canvas.drawPath(path, paint);
-
-    if (rng.nextDouble() < 0.18 && layerIndex == 2) {
-      final edgePaint = Paint()
-        ..color = const Color(0xFF333333).withOpacity(0.3)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 0.8;
-      canvas.drawLine(
-        Offset(x + width / 3, baseY),
-        Offset(x + windOffset * 0.8 + width / 3, baseY - height * 0.8),
-        edgePaint,
-      );
-    }
   }
 
   @override
-  bool shouldRepaint(covariant _RealisticGrassPainter oldDelegate) =>
-      oldDelegate.windPhase != windPhase || oldDelegate.densityBoost != densityBoost;
+  bool shouldRepaint(covariant _GrassLitePainter old) =>
+      old.windPhase != windPhase || old.densityBoost != densityBoost;
 }
 
+/// ------------------------------------------------------------
+/// Buttons + Mute
+/// ------------------------------------------------------------
 class _EnhancedPillButton extends StatefulWidget {
   final String label;
   final String route;
   final double delay;
   final Color base;
   final Color glow;
+  final VoidCallback? beforeNav;
   const _EnhancedPillButton({
     required this.label,
     required this.route,
     required this.delay,
     required this.base,
     required this.glow,
+    this.beforeNav,
     super.key,
   });
   @override
@@ -449,27 +539,36 @@ class _EnhancedPillButtonState extends State<_EnhancedPillButton> with TickerPro
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
+    final isNarrow = width < 900;
+    final double? pillWidth = isNarrow ? (width * 0.30).clamp(180.0, 260.0).toDouble() : null;
+
     return MouseRegion(
       onEnter: (_) => setState(() => _hover = true),
       onExit: (_) => setState(() => _hover = false),
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
-        onTap: () => Navigator.pushNamed(context, widget.route),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOut,
-          transform: Matrix4.identity()..scale(_hover ? 1.08 : 1.0),
-          child: AnimatedBuilder(
-            animation: _shimmerAnimation,
-            builder: (_, __) => Container(
-              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
-              decoration: AppDecorations.pill(
-                hover: _hover,
-                shimmerStop: _shimmerAnimation.value,
-                base: widget.base,
-                glow: widget.glow,
+        onTap: () {
+          widget.beforeNav?.call();
+          Navigator.pushNamed(context, widget.route);
+        },
+        child: SizedBox(
+          width: pillWidth,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOut,
+            transform: Matrix4.identity()..scale(_hover ? 1.06 : 1.0),
+            child: AnimatedBuilder(
+              animation: _shimmerAnimation,
+              builder: (_, __) => Container(
+                padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
+                decoration: AppDecorations.pill(
+                  hover: _hover,
+                  shimmerStop: _shimmerAnimation.value,
+                  base: widget.base,
+                  glow: widget.glow,
+                ),
+                child: Text(widget.label, style: AppTextStyles.pillButton(_hover, width)),
               ),
-              child: Text(widget.label, style: AppTextStyles.pillButton(_hover, width)),
             ),
           ),
         ),

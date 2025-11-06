@@ -8,7 +8,11 @@ import 'package:itonatalaga/pages/activity2_page.dart' as a2;
 import 'package:itonatalaga/pages/activity3_page.dart' as a3;
 import 'package:itonatalaga/pages/activity4_page.dart' as a4;
 
-void main() => runApp(const MyApp());
+void main() {
+  ErrorWidget.builder =
+      (FlutterErrorDetails details) => const SizedBox.shrink();
+  runApp(const MyApp());
+}
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
