@@ -27,12 +27,12 @@ class MyApp extends StatelessWidget {
         scaffoldBackgroundColor: const Color(0xFFFF2A2A),
       ),
       // TIP: remove const here to tolerate a non-const constructor if that's what you currently have
-      home: HomePage(),
+      home: const HomePage(),
       routes: {
-        '/a1': (_) => a1.Activity1Page(),
-        '/a2': (_) => a2.Activity2Page(),
-        '/a3': (_) => a3.Activity3Page(),
-        '/a4': (_) => a4.Activity4Page(),
+        '/a1': (_) => const a1.Activity1Page(),
+        '/a2': (_) => const a2.Activity2Page(),
+        '/a3': (_) => const a3.Activity3Page(),
+        '/a4': (_) => const a4.Activity4Page(),
       },
     );
   }

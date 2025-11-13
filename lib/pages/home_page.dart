@@ -325,7 +325,6 @@ class _AtmosphericParticles extends StatelessWidget {
     required this.progress,
     required this.particles,
     required this.screenSize,
-    super.key,
   });
   @override
   Widget build(BuildContext context) {
@@ -362,7 +361,7 @@ class _CloudShadowLite extends StatelessWidget {
   final double progress;
   final double topFraction;
   final Size screenSize;
-  const _CloudShadowLite({required this.progress, required this.topFraction, required this.screenSize, super.key});
+  const _CloudShadowLite({required this.progress, required this.topFraction, required this.screenSize});
 
   @override
   Widget build(BuildContext context) {
@@ -394,7 +393,7 @@ class _CloudShadowLitePainter extends CustomPainter {
       ..shader = RadialGradient(
         colors: [c.withOpacity(a), c.withOpacity(0)],
         stops: const [0.0, 1.0],
-      ).createShader(Rect.fromCircle(center: Offset(0, 0), radius: 1)); // shader updated per oval
+      ).createShader(Rect.fromCircle(center: const Offset(0, 0), radius: 1)); // shader updated per oval
 
     void drawOval(Offset center, Size s, Color color, double alpha) {
       final rect = Rect.fromCenter(center: center, width: s.width, height: s.height);
@@ -507,7 +506,6 @@ class _EnhancedPillButton extends StatefulWidget {
     required this.base,
     required this.glow,
     this.beforeNav,
-    super.key,
   });
   @override
   State<_EnhancedPillButton> createState() => _EnhancedPillButtonState();
@@ -580,7 +578,7 @@ class _EnhancedPillButtonState extends State<_EnhancedPillButton> with TickerPro
 class _MusicButton extends StatelessWidget {
   final bool muted;
   final VoidCallback onToggle;
-  const _MusicButton({super.key, required this.muted, required this.onToggle});
+  const _MusicButton({required this.muted, required this.onToggle});
   @override
   Widget build(BuildContext context) {
     return Tooltip(

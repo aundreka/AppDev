@@ -68,7 +68,7 @@ class _Activity1PageState extends State<Activity1Page> {
     final edgePad = mq.size.width < 420 ? 10.0 : 16.0;
 
     return MediaQuery(
-      data: mq.copyWith(textScaleFactor: textScale),
+      data: mq.copyWith(textScaler: TextScaler.linear(textScale)),
       child: Scaffold(
         body: Container(
           // Very darkened background image
@@ -501,9 +501,9 @@ class _LeftPane extends StatelessWidget {
 
     return Padding(
       padding: EdgeInsets.all(pad),
-      child: Column(
+      child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
+        children: [
           _CoverCollage(),
           SizedBox(height: 16),
           Text(
@@ -680,11 +680,11 @@ class _HoverListItem extends StatefulWidget {
   final Widget Function(bool hovering) builder;
 
   const _HoverListItem({
-    Key? key,
+    super.key,
     required this.selected,
     required this.onTap,
     required this.builder,
-  }) : super(key: key);
+  });
 
   @override
   State<_HoverListItem> createState() => _HoverListItemState();
@@ -1061,9 +1061,9 @@ class _NowPlayingBadgeStatic extends StatelessWidget {
         borderRadius: BorderRadius.circular(999),
         border: Border.all(color: Colors.white24),
       ),
-      child: Row(
+      child: const Row(
         mainAxisSize: MainAxisSize.min,
-        children: const [
+        children: [
           Icon(Icons.graphic_eq, size: 16, color: Colors.white70),
           SizedBox(width: 6),
           Text(
@@ -1084,8 +1084,7 @@ class _NowPlayingBadgeStatic extends StatelessWidget {
 class _HoverScale extends StatefulWidget {
   final Widget child;
   final double scale;
-  const _HoverScale({required this.child, this.scale = 1.06, Key? key})
-      : super(key: key);
+  const _HoverScale({required this.child, this.scale = 1.06, super.key});
 
   @override
   State<_HoverScale> createState() => _HoverScaleState();
@@ -1122,57 +1121,57 @@ class TrackMeta {
 }
 
 final List<TrackMeta> _tracks = [
-  TrackMeta(
+  const TrackMeta(
       '28 Days Later Theme',
       'John Murphy',
       '3:06',
       'assets/album-cover/28-days-later.jpg',
       'assets/music/28-days-later-theme.mp3'),
-  TrackMeta(
+  const TrackMeta(
       'Cannibal Holocaust Theme',
       'Riz Ortolani',
       '2:51',
       'assets/album-cover/cannibal-holocaust.jpg',
       'assets/music/cannibal-holocaust-theme.mp3'),
-  TrackMeta(
+  const TrackMeta(
       'Fright Night Theme',
       'J. Geoffreys',
       '4:02',
       'assets/album-cover/fright-night.jpeg',
       'assets/music/fright-night-theme.mp3'),
-  TrackMeta(
+  const TrackMeta(
       'Halloween (Original Theme)',
       'John Carpenter',
       '4:12',
       'assets/album-cover/halloween.jpg',
       'assets/music/halloween-original-theme.mp3'),
-  TrackMeta('Phantasm Theme', 'Fred Myrow', '2:58',
+  const TrackMeta('Phantasm Theme', 'Fred Myrow', '2:58',
       'assets/album-cover/phantasm.jpg', 'assets/music/phantasm-theme.mp3'),
-  TrackMeta(
+  const TrackMeta(
       'Return of the Living Dead',
       'The Cramps',
       '3:46',
       'assets/album-cover/return.jpg',
       'assets/music/return-of-the-living-dead-theme.mp3'),
-  TrackMeta(
+  const TrackMeta(
       'Serbian Film Soundtrack',
       'Sky Wikluh',
       '3:37',
       'assets/album-cover/serbian.jpg',
       'assets/music/serbian-film-soundtrack.mp3'),
-  TrackMeta(
+  const TrackMeta(
       'The Exorcist (Tubular Bells)',
       'Mike Oldfield',
       '3:30',
       'assets/album-cover/exorcist.jpeg',
       'assets/music/the-exorcist-soundtrack.mp3'),
-  TrackMeta(
+  const TrackMeta(
       'The Shining Theme',
       'Wendy Carlos',
       '3:33',
       'assets/album-cover/shining.jpg',
       'assets/music/the-shining-theme.mp3'),
-  TrackMeta(
+  const TrackMeta(
       'The Thing Theme',
       'Ennio Morricone',
       '3:25',

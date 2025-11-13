@@ -5,7 +5,7 @@ class Activity3Page extends StatelessWidget {
   const Activity3Page({super.key});
   @override
   Widget build(BuildContext context) {
-    return FullImagePage(
+    return const FullImagePage(
       title: 'Chapter 3',
       assetPath: 'assets/activity3.png',
     );
