@@ -16,6 +16,7 @@ dependencies:
   flame: ^1.33.0
   shared_preferences: ^2.3.1
   vector_math: ^2.1.4
+  flame_audio: ^2.11.11
 
 
 
@@ -35,9 +36,17 @@ flutter:
     - assets/music/
     - assets/album-cover/
     - assets/images/activity2/maps/level1/floor.png
+    - assets/images/activity2/maps/level2/floor.png
+    - assets/images/activity2/maps/level3/floor.png
     - assets/images/activity2/maps/level1/assets/
-    - assets/images/activity2/players/level1.png
+    - assets/images/activity2/maps/level2/assets/
+    - assets/images/activity2/maps/level3/assets/
+    - assets/images/activity2/players/
     - assets/images/activity2/monsters/level1/
+    - assets/images/activity2/monsters/level2/
+    - assets/images/activity2/monsters/level3/
+    - assets/images/activity2/weapons/
+    - assets/audio/
 
 
   fonts:

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flame/game.dart';
-import 'maps/level1_map.dart';
+import 'maps/level3_map.dart';
 
 const Map<WeaponType, Color> kWeaponAccentColors = {
   WeaponType.forcefield: Color(0xFF38BDF8), // cyan
@@ -11,17 +11,17 @@ const Map<WeaponType, Color> kWeaponAccentColors = {
   WeaponType.holyWand: Color(0xFFFB7185), // pink
 };
 
-class Level1Screen extends StatelessWidget {
-  const Level1Screen({super.key});
+class Level3Screen extends StatelessWidget {
+  const Level3Screen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final game = Level1Map();
+    final game = Level3Map();
     return Scaffold(
-      body: GameWidget<Level1Map>(
+      body: GameWidget<Level3Map>(
         game: game,
         overlayBuilderMap: {
-          'levelUp': (ctx, Level1Map game) {
+          'levelUp': (ctx, Level3Map game) {
             return LevelUpOverlay(game: game);
           },
         },
@@ -31,7 +31,7 @@ class Level1Screen extends StatelessWidget {
 }
 
 class LevelUpOverlay extends StatelessWidget {
-  final Level1Map game;
+  final Level3Map game;
   const LevelUpOverlay({super.key, required this.game});
 
   @override
@@ -54,7 +54,7 @@ class LevelUpOverlay extends StatelessWidget {
                 color: const Color(0xFF020617),
                 borderRadius: BorderRadius.circular(8), // smaller = more pixel
                 border: Border.all(
-                  color: const Color(0xFF38BDF8), // cyan outer frame
+                  color: const Color.fromARGB(255, 243, 240, 63), // cyan outer frame
                   width: 3,
                 ),
                 boxShadow: const [
@@ -133,7 +133,7 @@ class LevelUpOverlay extends StatelessWidget {
 }
 
 class _WeaponCard extends StatelessWidget {
-  final Level1Map game;
+  final Level3Map game;
   final WeaponType weapon;
 
   const _WeaponCard({

@@ -1,8 +1,14 @@
 // lib/activity2/home_screen.dart
 import 'package:flutter/material.dart';
- import 'level1_screen.dart';
-// import 'levels/level2_screen.dart';
-// import 'levels/level3_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'level1_screen.dart';
+import 'level2_screen.dart';
+import 'level3_screen.dart';
+
+
+
+// Global key for SharedPreferences
+const String kHighScoreKey = 'grimm_runner_high_score';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -12,8 +18,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
-  // If you want persistent high score, wire this to SharedPreferences later.
-  // For now it’s an in-memory demo value.
   int _highScore = 0;
 
   late final AnimationController _titleGlow;
@@ -28,7 +32,19 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       lowerBound: 0.2,
       upperBound: 1.0,
     )..repeat(reverse: true);
+
     _glow = CurvedAnimation(parent: _titleGlow, curve: Curves.easeInOut);
+
+    _loadHighScore();
+  }
+
+  Future<void> _loadHighScore() async {
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getInt(kHighScoreKey) ?? 0;
+    if (!mounted) return;
+    setState(() {
+      _highScore = saved;
+    });
   }
 
   @override
@@ -66,7 +82,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ),
           ),
 
-          // Subtle monster watermarks using your assets
+          // Subtle monster watermarks
           Positioned(
             left: -24,
             bottom: size.height * 0.18,
@@ -168,7 +184,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         onTap: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (_) => const Level1Screen()));
+                            MaterialPageRoute(builder: (_) => const Level1Screen()),
+                          );
                         },
                         accent: const Color(0xFF16A34A),
                       ),
@@ -178,11 +195,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         subtitle: 'Candy House • Slimes • 4 Waves',
                         thumbAsset: 'images/activity2/monsters/level2/boss.png',
                         onTap: () {
-                          // TODO: replace with:
-                          // Navigator.push(context, MaterialPageRoute(builder: (_) => const Level2Screen()));
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (_) => const _ComingSoon(levelName: 'Level 2: Hansel & Gretel')),
+                            MaterialPageRoute(builder: (_) => const Level2Screen()),
                           );
                         },
                         accent: const Color(0xFFDC2626),
@@ -191,13 +206,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       _LevelCard(
                         title: 'Level 3 — Jack & the Beanstalk',
                         subtitle: 'Field • Minotaurs • 5 Waves',
-                        thumbAsset: 'images/activity2/monsters/level1/boss.png',
+                        thumbAsset: 'images/activity2/monsters/level3/boss.png',
                         onTap: () {
-                          // TODO: replace with:
-                          // Navigator.push(context, MaterialPageRoute(builder: (_) => const Level3Screen()));
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (_) => const _ComingSoon(levelName: 'Level 3: Jack & the Beanstalk')),
+                           MaterialPageRoute(builder: (_) => const Level3Screen()),
+
                           );
                         },
                         accent: const Color(0xFF2563EB),
@@ -217,7 +231,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 context: context,
                                 builder: (_) => AlertDialog(
                                   backgroundColor: const Color(0xFF0B1020),
-                                  title: const Text('Settings', style: TextStyle(color: Colors.white)),
+                                  title: const Text(
+                                    'Settings',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
                                   content: const Text(
                                     'Add sound, vibration, and control options here.',
                                     style: TextStyle(color: Colors.white70),
@@ -236,7 +253,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           _HomeButton(
                             icon: Icons.refresh,
                             label: 'Reset Score',
-                            onTap: () {
+                            onTap: () async {
+                              final prefs = await SharedPreferences.getInstance();
+                              await prefs.setInt(kHighScoreKey, 0);
+                              if (!mounted) return;
                               setState(() => _highScore = 0);
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(content: Text('High score reset.')),
@@ -257,6 +277,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 }
+
+                  
 
 class _LevelCard extends StatelessWidget {
   final String title;
