@@ -1,10 +1,10 @@
-// lib/activity2/win.dart
+
 import 'package:flutter/material.dart';
 import 'package:flame_audio/flame_audio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'level3_screen.dart';
-import 'home_screen.dart'; // this has kHighScoreKey
+import 'home_screen.dart'; 
 
 class WinScreen extends StatefulWidget {
   final int highScore;
@@ -84,7 +84,7 @@ class _WinScreenState extends State<WinScreen> {
               ),
               const SizedBox(height: 32),
 
-              // NEXT LEVEL
+              
               ElevatedButton(
                 onPressed: () {
                   Navigator.of(context).pushReplacement(
@@ -109,7 +109,7 @@ class _WinScreenState extends State<WinScreen> {
               ),
               const SizedBox(height: 12),
 
-              // BACK HOME
+              
               TextButton(
                 onPressed: () {
                   Navigator.of(context).pushReplacement(

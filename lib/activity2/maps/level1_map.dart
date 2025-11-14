@@ -10,8 +10,6 @@ import 'package:flame_audio/flame_audio.dart';
 import '../lose1.dart';
 import '../win1.dart';
 
-//constants
-
 const double kPanSpeed = 240;
 const double kFloorRadiusPx = 3000; 
 const double kChunkRadiusPx = 3200; 
@@ -629,7 +627,7 @@ class Level1Map extends FlameGame {
     final wandLvl = stats.weaponLevels[WeaponType.holyWand] ?? 0;
     final swordLvl = stats.weaponLevels[WeaponType.holySword] ?? 0;
 
-    const mgTargets = [1, 2, 2, 3, 3, 5]; // index = level
+    const mgTargets = [1, 2, 2, 3, 3, 5];
     final maxTargets = mgTargets[mgLvl.clamp(0, 5)];
 
     const wandHits = [1, 1, 1, 2, 2, 3];
@@ -731,7 +729,7 @@ void _spawnProjectile(Vector2 start, Vector2 targetPos) {
         break;
     }
   }
-  /* ===================== SPAWNS ===================== */
+ 
 
   void _runSpawns() {
     Vector2 spawnNear() {
@@ -899,7 +897,6 @@ void _spawnProjectile(Vector2 start, Vector2 targetPos) {
   }
 
   void _refreshScoreText() {
-    // If you want to show Level too, append " | LVL ${stats.level}"
     _scoreText?.text = 'Score $_currentScore  |  Best $_highScore';
   }
 
@@ -923,9 +920,8 @@ void _spawnProjectile(Vector2 start, Vector2 targetPos) {
   }
 
   void _updateHudForSize(Vector2 s) {
-    final isCompact = s.x < 500; // mobile portrait threshold
+    final isCompact = s.x < 500; 
 
-    // top-left positions
     _waveMeter.position = Vector2(8, isCompact ? 32 : 32);
 
     final barW = (s.x * (isCompact ? 0.72 : 0.5)).clamp(160.0, 380.0);
@@ -935,9 +931,6 @@ void _spawnProjectile(Vector2 start, Vector2 targetPos) {
    void _showLevelUpModal() {
     final equippedCount = _equippedWeapons.length;
 
-    // Pool:
-    // - If we have <4 weapons, allow any non-max weapon
-    // - If we already have 4, only allow upgrading those 4 (non-max)
     Iterable<WeaponType> pool;
     if (equippedCount < 4) {
       pool = WeaponType.values.where(
@@ -958,7 +951,6 @@ available.shuffle(_rng);
       available.length >= 2 ? 2 : available.length,
     ).toList();
 
-    // 🔊 Level up sound
     FlameAudio.play('level_up.mp3');
 
     pauseEngine();
@@ -967,9 +959,7 @@ available.shuffle(_rng);
   }
 
   void _applyWeaponBuffs(WeaponType weapon, int oldLevel, int newLevel) {
-    // Helper to compute incremental bonus between two absolute values
     double delta(List<double> values) {
-      // values indexed 0..5, where index = level
       final before = values[oldLevel];
       final after = values[newLevel];
       return after - before;
@@ -977,25 +967,22 @@ available.shuffle(_rng);
 
     switch (weapon) {
       case WeaponType.forcefield:
-        // Range +1..+5 (in "units")
         final ranges = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0];
         final dr = delta(ranges);
         stats.range += dr;
         break;
       case WeaponType.machineGun:
-        // Damage bonus and some extra range
       final dmgBonus = [0.0, 10.0, 30.0, 60.0, 120.0, 300.0];
       final rangeBonus = [0.0, 1.0, 1.0, 2.0, 2.0, 3.0];
         stats.dps += delta(dmgBonus);
         stats.range += delta(rangeBonus);
-        // Multi-target (2,2,3,3,5) – you can wire this into your attack logic later
         break;
       case WeaponType.goldenGoose:
         final hpBonus = [0.0, 200.0, 300.0, 300.0, 400.0, 500.0];
         final regen = [0.0, 10.0, 10.0, 15.0, 15.0, 20.0];
         final shieldMax = [0.0, 0.0, 150.0, 200.0, 250.0, 300.0];
         stats.maxHp += delta(hpBonus);
-        stats.hp += delta(hpBonus); // heal the added HP
+        stats.hp += delta(hpBonus); 
         stats.hpRegenPerSec += delta(regen);
         stats.maxShield += delta(shieldMax);
         break;
@@ -1004,7 +991,6 @@ available.shuffle(_rng);
         final rangeBonus = [0.0, 1.0, 1.0, 2.0, 2.0, 3.0];
         stats.dps += delta(dmgBonus);
         stats.range += delta(rangeBonus);
-        // attacks per hit (1,1,1,2,2,3) – wire later if you extend attack system
         break;
         case WeaponType.holySword:
           final dmgBonus = [0.0, 0.0, 20.0, 50.0, 150.0, 500.0];
@@ -1015,17 +1001,14 @@ available.shuffle(_rng);
         case WeaponType.reaperScythe:
         final rangeBonus = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0];
         stats.range += delta(rangeBonus);
-        // Later you can implement the periodic AoE DoT around the player
         break;
     }
   }
 
-  // Called from the overlay when player taps a card
   void chooseWeapon(WeaponType weapon) {
     final current = _weaponLevels[weapon] ?? 0;
     final isNew = current == 0;
 
-    // If this is a new weapon and we already have 4, ignore choice
     if (isNew && _equippedWeapons.length >= 4) {
       _closeLevelUpModal();
       return;
@@ -1084,10 +1067,9 @@ available.shuffle(_rng);
       }
     }
 
-    // Soft looping SFX while it's hitting things
     if (anyInAura && _forcefieldSfxCooldown <= 0) {
       FlameAudio.play('forcefield.mp3');
-      _forcefieldSfxCooldown = 0.7; // seconds
+      _forcefieldSfxCooldown = 0.7; 
     }
   }
 
@@ -1095,7 +1077,6 @@ available.shuffle(_rng);
     final lvl = stats.weaponLevels[WeaponType.reaperScythe] ?? 0;
     if (lvl <= 0) return;
 
-    // Intervals per level (seconds)
     const intervalByLevel = [0.0, 3.0, 3.0, 2.0, 2.0, 2.0];
     const baseDmgByLevel = [0.0, 20.0, 30.0, 60.0, 160.0, 300.0];
     const burnDpsByLevel = [0.0, 10.0, 15.0, 30.0, 80.0, 150.0];
@@ -1105,10 +1086,8 @@ available.shuffle(_rng);
     if (_scytheSlashTimer > 0) return;
     _scytheSlashTimer = intervalByLevel[lvl];
 
-    // 💥 Play scythe slash sound
     FlameAudio.play('scythe.mp3');
-    // 🔥 Start glow for a short moment when slash happens
-    _scytheGlowTimer = 0.35; // duration of glow in seconds
+    _scytheGlowTimer = 0.35; 
 
     final radius = stats.range * kUnitPx;
     final r2 = radius * radius;
@@ -1136,9 +1115,9 @@ enum EnemyKind { frog, bat, fox, boss }
 class EnemyStats {
   final double hp;
   final double damage;
-  final double range; // in "units"
-  final double speed; // px/s
-  final int exp; // exp/score on death
+  final double range; 
+  final double speed;
+  final int exp;
 
   const EnemyStats(this.hp, this.damage, this.range, this.speed, this.exp);
 }
@@ -1175,7 +1154,6 @@ class Enemy extends PositionComponent with HasGameRef<Level1Map> {
     _hp = s.hp;
     _maxHp = s.hp;
 
-    // Sprite
     final sprite = gameRef.enemySprites[kind];
     if (sprite != null) {
       add(
@@ -1187,7 +1165,6 @@ class Enemy extends PositionComponent with HasGameRef<Level1Map> {
         ),
       );
     } else {
-      // Fallback shape
       add(
         CircleComponent(
           radius: size.x / 2,
@@ -1198,7 +1175,6 @@ class Enemy extends PositionComponent with HasGameRef<Level1Map> {
       );
     }
 
-    // Enemy HP bar (red)
     add(
       EnemyHpBar(
         enemy: this,
@@ -1215,8 +1191,6 @@ class Enemy extends PositionComponent with HasGameRef<Level1Map> {
     final stats = kEnemyStats[kind]!;
     _hitCooldown = max(0, _hitCooldown - dt);
 
-    // 👇 NEW: tick debuffs
-    // Slow
     if (_slowTimeLeft > 0) {
       _slowTimeLeft = max(0, _slowTimeLeft - dt);
       if (_slowTimeLeft <= 0) {
@@ -1224,7 +1198,6 @@ class Enemy extends PositionComponent with HasGameRef<Level1Map> {
       }
     }
 
-    // Damage-over-time
     if (_dotTimeLeft > 0 && _dotPerSecond > 0) {
       final tickDmg = _dotPerSecond * dt;
       _dotTimeLeft = max(0, _dotTimeLeft - dt);
@@ -1233,19 +1206,17 @@ class Enemy extends PositionComponent with HasGameRef<Level1Map> {
       }
     }
 
-    // Always steer toward the player's world-center
     final target = gameRef.playerWorldCenter;
     final dir = target - position;
     final d2 = dir.length2;
     if (d2 > 1e-6) {
       final d = sqrt(d2);
       final baseSpeed = stats.speed;
-      final speed = baseSpeed * _slowMultiplier; // 👈 slowed if debuffed
+      final speed = baseSpeed * _slowMultiplier;
       final step = min(d, speed * dt);
       position += dir * (step / d);
     }
 
-    // Contact damage vs the same target
     final rangePx = stats.range * kUnitPx;
     if ((position - target).length2 <= rangePx * rangePx) {
       if (_hitCooldown <= 0) {
@@ -1254,7 +1225,6 @@ class Enemy extends PositionComponent with HasGameRef<Level1Map> {
       }
     }
 
-    // Cull based on distance from the player
     final maxRadius = kChunkRadiusPx + 3000;
     if ((position - target).length2 > maxRadius * maxRadius) {
       removeFromParent();
@@ -1269,11 +1239,9 @@ class Enemy extends PositionComponent with HasGameRef<Level1Map> {
       gameRef.onEnemyKilled(kind, s.exp);
 
       if (kind == EnemyKind.boss) {
-        // 👑 Boss death SFX + win
         FlameAudio.play('boss_death.mp3');
         gameRef._goToWin();
       } else {
-        // normal enemy death SFX
         FlameAudio.play('enemy_death.mp3');
       }
 
@@ -1283,7 +1251,6 @@ class Enemy extends PositionComponent with HasGameRef<Level1Map> {
 
 
   void applySlow(double factor, double duration) {
-    // factor: 0.5 = 50% speed
     if (factor < _slowMultiplier || _slowTimeLeft <= 0) {
       _slowMultiplier = factor;
       _slowTimeLeft = duration;
@@ -1293,7 +1260,6 @@ class Enemy extends PositionComponent with HasGameRef<Level1Map> {
   }
 
   void applyDot(double dps, double duration) {
-    // Keep the strongest DoT
     _dotPerSecond = max(_dotPerSecond, dps);
     _dotTimeLeft = max(_dotTimeLeft, duration);
   }
@@ -1305,13 +1271,12 @@ class Enemy extends PositionComponent with HasGameRef<Level1Map> {
   }
 }
 
-/* ============================ FIST PROJECTILE ============================ */
 
 class FistProjectile extends PositionComponent with HasGameRef<Level1Map> {
   final Vector2 start;
   final Vector2 end;
-  final double speed; // px/s
-  final Sprite projectileSprite; // 👈 NEW
+  final double speed;
+  final Sprite projectileSprite; 
 
 
   late final SpriteComponent _sprite;
@@ -1320,13 +1285,12 @@ class FistProjectile extends PositionComponent with HasGameRef<Level1Map> {
     required this.start,
     required this.end,
     required this.projectileSprite,
-    this.speed = 520, // tweak for feel
+    this.speed = 520, 
   }) : super(
           position: start.clone(),
           size: Vector2.all(48),
           anchor: Anchor.center,
         ) {
-    // Rotate the projectile to face the target
     final dir = end - start;
     angle = atan2(dir.y, dir.x);
   }
@@ -1365,18 +1329,12 @@ class FistProjectile extends PositionComponent with HasGameRef<Level1Map> {
   }
 }
 
-/* ============================ WORLD ROOT ============================ */
-
 class WorldLayer extends World {}
-
-/* ============================ HUD PLAYER ============================ */
 
 class HudPlayer extends SpriteComponent {
   HudPlayer({required Sprite sprite})
       : super(sprite: sprite, size: Vector2.all(120), anchor: Anchor.center);
 }
-
-/* ============================ HUD HP BAR ============================ */
 
 class HudHpBar extends PositionComponent {
   final PlayerStats Function() statsProvider;
@@ -1407,7 +1365,7 @@ class HudHpBar extends PositionComponent {
       priority: 1,
     );
 
-    // HP (green)
+    
     _hpFg = RectangleComponent(
       size: size.clone(),
       anchor: Anchor.centerLeft,
@@ -1416,7 +1374,7 @@ class HudHpBar extends PositionComponent {
       priority: 2,
     );
 
-    // Shield (blue) — will be drawn to the *right* of HP
+    
       _shieldFg = RectangleComponent(
         size: Vector2.zero(),
         anchor: Anchor.centerLeft,
@@ -1437,7 +1395,7 @@ class HudHpBar extends PositionComponent {
 
     final s = statsProvider();
 
-    // --- HP BAR ---
+    
     final hpRatio = (s.maxHp <= 0)
         ? 0.0
         : (s.hp / s.maxHp).clamp(0.0, 1.0);
@@ -1447,7 +1405,7 @@ class HudHpBar extends PositionComponent {
       ..size = Vector2(hpWidth, height)
       ..position = Vector2(-width / 2, 0);
 
-   // --- SHIELD OVERLAY ---
+   
 final hasShield = s.maxShield > 0 && s.shield > 0;
 
 if (!hasShield) {
@@ -1455,8 +1413,8 @@ if (!hasShield) {
   return;
 }
 
-// Show shield as its own bar overlaying the HP bar,
-// proportional to maxShield, independent of current HP.
+
+
 final shieldRatio = (s.shield / s.maxShield).clamp(0.0, 1.0);
 final shieldWidth = width * shieldRatio;
 
@@ -1471,7 +1429,7 @@ _shieldFg
 
   Vector2 _targetLocalPos() {
     final y = (offsetAboveHead);
-    // same X as before, just reusing your layout
+    
     return Vector2(130, y);
   }
 }
@@ -1495,7 +1453,7 @@ class HudLevelBadge extends PositionComponent {
 
   @override
   Future<void> onLoad() async {
-    size = Vector2(34, barHeight); // small pill
+    size = Vector2(34, barHeight); 
 
     _bg = RectangleComponent(
       size: size,
@@ -1541,7 +1499,7 @@ class EnemyHpBar extends PositionComponent {
   final Enemy enemy;
   final double width;
   final double height;
-  final double gap; // vertical gap above the enemy sprite
+  final double gap; 
 
   late final RectangleComponent _bg;
   late final RectangleComponent _fg;
@@ -1561,7 +1519,7 @@ class EnemyHpBar extends PositionComponent {
       size: size,
       anchor: Anchor.center,
       position: Vector2.zero(),
-      paint: Paint()..color = const Color(0xCC1F2937), // dark bg
+      paint: Paint()..color = const Color(0xCC1F2937), 
       priority: 10,
     );
 
@@ -1569,7 +1527,7 @@ class EnemyHpBar extends PositionComponent {
       size: size.clone(),
       anchor: Anchor.centerLeft,
       position: Vector2(-width / 2, 0),
-      paint: Paint()..color = const Color(0xFFE11D48), // red
+      paint: Paint()..color = const Color(0xFFE11D48), 
       priority: 11,
     );
 
@@ -1588,7 +1546,7 @@ class EnemyHpBar extends PositionComponent {
   }
 
   Vector2 _targetLocalPos() {
-    // hover just above the enemy’s head
+    
     final y = -(enemy.size.y / 2 + gap + height / 2);
     return Vector2(0, y);
   }
@@ -1597,7 +1555,7 @@ class EnemyHpBar extends PositionComponent {
 class HudWaveMeter extends PositionComponent {
   final double width;
   final double height;
-  final List<double> flags; // seconds
+  final List<double> flags; 
   final double total;
 
   double _progress = 0.0;
@@ -1642,7 +1600,7 @@ class HudWaveMeter extends PositionComponent {
     add(_bg);
     add(_fg);
 
-    // Flags along 0..width
+    
     for (final t in flags) {
       final x = size.x * (t / total);
       final flag = TextComponent(
@@ -1697,14 +1655,14 @@ class HudWeaponIcons extends PositionComponent
     required this.equippedProvider,
   }) : super(anchor: Anchor.center);
 
-  // Background colors for each weapon
+  
   final Map<WeaponType, Color> bgColors = {
-    WeaponType.forcefield: Color(0xFF3B82F6), // Blue
-    WeaponType.holySword: Color(0xFFFACC15),  // Yellow/Gold
-    WeaponType.reaperScythe: Color(0xFFEF4444), // Red
-    WeaponType.machineGun: Color(0xFF6B7280), // Gray
-    WeaponType.goldenGoose: Color(0xFF22C55E), // Green
-    WeaponType.holyWand: Color(0xFFA855F7), // Purple
+    WeaponType.forcefield: Color(0xFF3B82F6), 
+    WeaponType.holySword: Color(0xFFFACC15),  
+    WeaponType.reaperScythe: Color(0xFFEF4444), 
+    WeaponType.machineGun: Color(0xFF6B7280), 
+    WeaponType.goldenGoose: Color(0xFF22C55E), 
+    WeaponType.holyWand: Color(0xFFA855F7), 
   };
 
   @override
@@ -1719,7 +1677,7 @@ class HudWeaponIcons extends PositionComponent
   }
 
   Vector2 _targetLocalPos() {
-    // Center above HP bar; adjust Y as needed
+    
     return Vector2(70, -35);
   }
 
@@ -1735,13 +1693,13 @@ class HudWeaponIcons extends PositionComponent
 
     final count = min(4, equipped.length);
     const double iconSize = 22.0;
-    const double circleSize = 28.0; // background circle
+    const double circleSize = 28.0; 
     const double spacing = 8.0;
 
     final totalWidth = count * circleSize + (count - 1) * spacing;
     final startX = -totalWidth / 2;
 
-    // Scythe glow timer
+    
     final glowTime = gameRef.scytheGlowTime;
     final glowActive = glowTime > 0;
     double glowPhase = 0;
@@ -1760,7 +1718,7 @@ class HudWeaponIcons extends PositionComponent
       final dx = startX + i * (circleSize + spacing);
       final pos = Offset(dx, 0);
 
-      // Circle background
+      
       final bgPaint = Paint()
         ..color = (bgColors[w] ?? Colors.white).withOpacity(0.85)
         ..style = PaintingStyle.fill;
@@ -1771,7 +1729,7 @@ class HudWeaponIcons extends PositionComponent
         bgPaint,
       );
 
-      // Border around the circle
+      
       final borderPaint = Paint()
         ..color = Colors.white.withOpacity(0.95)
         ..style = PaintingStyle.stroke
@@ -1783,7 +1741,7 @@ class HudWeaponIcons extends PositionComponent
         borderPaint,
       );
 
-      // --- Reaper Scythe special glow ring ---
+      
       if (w == WeaponType.reaperScythe) {
         final lvl = stats.weaponLevels[w] ?? 0;
         if (lvl > 0 && glowActive) {
@@ -1799,7 +1757,7 @@ class HudWeaponIcons extends PositionComponent
         }
       }
 
-      // Icon draw
+      
       sprite.render(
         canvas,
         position: Vector2(dx, 0),
@@ -1812,11 +1770,11 @@ class HudWeaponIcons extends PositionComponent
 
 
 
-/* ============================ FLOOR GRID (TILED MAP) ============================ */
+
 
 class FloorGrid extends Component {
   final Sprite floorSprite;
-  final Vector2 tileSize; // (w, h)
+  final Vector2 tileSize; 
 
   final Map<String, SpriteComponent> _tiles = {};
 
@@ -1877,7 +1835,7 @@ class FloorGrid extends Component {
   }
 }
 
-/* ============================ ASSET CHUNK MANAGER ============================ */
+
 
 class ChunkManager extends Component {
   final Map<String, Sprite> spriteCache;
@@ -1931,7 +1889,7 @@ class ChunkManager extends Component {
   }
 }
 
-/* ============================ CHUNK (ASSETS) ============================ */
+
 
 class Chunk extends PositionComponent {
   final int cx, cy;
@@ -2019,7 +1977,7 @@ class Chunk extends PositionComponent {
 }
 
 class AuraRing extends PositionComponent with HasGameRef<Level1Map> {
-  double _t = 0; // time accumulator
+  double _t = 0; 
 
   AuraRing() : super(anchor: Anchor.center);
 
@@ -2028,7 +1986,7 @@ class AuraRing extends PositionComponent with HasGameRef<Level1Map> {
     super.update(dt);
     _t += dt;
 
-    // Always follow the player
+    
     position = gameRef.playerWorldCenter;
   }
 
@@ -2040,23 +1998,23 @@ class AuraRing extends PositionComponent with HasGameRef<Level1Map> {
     final ffLvl = stats.weaponLevels[WeaponType.forcefield] ?? 0;
     final scLvl = stats.weaponLevels[WeaponType.reaperScythe] ?? 0;
 
-    // No forcefield / scythe → no ring
+    
     if (ffLvl <= 0 && scLvl <= 0) return;
 
-    // Base radius from current range
+    
     final baseRadius = stats.range * kUnitPx;
 
-    // --- Pulse animation ---
-    // One full pulse every ~2 seconds
-    const pulseSpeed = 2 * pi / 2.0; // radians per second
-    final s = sin(_t * pulseSpeed);  // -1..1
+    
+    
+    const pulseSpeed = 2 * pi / 2.0; 
+    final s = sin(_t * pulseSpeed);  
 
-    // Scale radius between ~0.95x and 1.05x
+    
     final scale = 1.0 + 0.05 * s;
     final radius = baseRadius * scale;
 
-    // Opacity between ~0.12 and ~0.28
-    final opacity = 0.8 + 0.08 * ((s + 1) / 2); // map -1..1 → 0..1
+    
+    final opacity = 0.8 + 0.08 * ((s + 1) / 2); 
 
     Color c;
     if (ffLvl > 0 && scLvl > 0) {

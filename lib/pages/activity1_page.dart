@@ -16,7 +16,7 @@ class _Activity1PageState extends State<Activity1Page> {
   StreamSubscription<Duration>? _posSub;
   StreamSubscription<Duration?>? _durSub;
 
-  bool _showList = false; // hide playlist by default
+  bool _showList = false; 
 
   @override
   void initState() {
@@ -24,7 +24,7 @@ class _Activity1PageState extends State<Activity1Page> {
     _player = AudioPlayer();
     _initPlaylist();
 
-    // Keep rebuilds snappy as playback changes
+    
     _posSub = _player.positionStream.listen((_) => setState(() {}));
     _durSub = _player.durationStream.listen((_) => setState(() {}));
   }
@@ -33,7 +33,7 @@ class _Activity1PageState extends State<Activity1Page> {
     final sources =
         _tracks.map((t) => AudioSource.asset(t.audioAsset, tag: t)).toList();
     await _player.setAudioSource(ConcatenatingAudioSource(children: sources));
-    // Ensure there's a current index so the closed view has content
+    
     if (_player.currentIndex == null) {
       await _player.seek(Duration.zero, index: 0);
     }
@@ -61,17 +61,17 @@ class _Activity1PageState extends State<Activity1Page> {
   @override
   Widget build(BuildContext context) {
     final mq = MediaQuery.of(context);
-    // Prevent overly large text metrics from breaking layout
+    
     final textScale = mq.textScaleFactor.clamp(1.0, 1.2);
 
-    // Adaptive paddings
+    
     final edgePad = mq.size.width < 420 ? 10.0 : 16.0;
 
     return MediaQuery(
       data: mq.copyWith(textScaler: TextScaler.linear(textScale)),
       child: Scaffold(
         body: Container(
-          // Very darkened background image
+          
           decoration: BoxDecoration(
             image: DecorationImage(
               image: const AssetImage('assets/activity1.gif'),
@@ -96,7 +96,7 @@ class _Activity1PageState extends State<Activity1Page> {
                   horizontalPad: edgePad,
                 ),
 
-                // Content with animated transition between CLOSED and OPEN views
+                
                 Expanded(
                   child: AnimatedSwitcher(
                     duration: const Duration(milliseconds: 240),
@@ -117,7 +117,7 @@ class _Activity1PageState extends State<Activity1Page> {
                   ),
                 ),
 
-                // Bottom controls: ONLY when playlist is OPEN
+                
                 AnimatedSwitcher(
                   duration: const Duration(milliseconds: 200),
                   switchInCurve: Curves.easeOut,
@@ -134,12 +134,12 @@ class _Activity1PageState extends State<Activity1Page> {
     );
   }
 
-  /// CLOSED STATE: Show exactly ONE song (current), with its cover + title/artist + controls
+  
   Widget _buildSingleNowPlaying(BuildContext context, {Key? key}) {
     return LayoutBuilder(
       key: key,
       builder: (context, constraints) {
-        // Clamp max width so it looks good on phones & tablets
+        
         final maxWidth = constraints.maxWidth.clamp(320, 640).toDouble();
         final sidePad = constraints.maxWidth < 420 ? 12.0 : 16.0;
 
@@ -158,17 +158,17 @@ class _Activity1PageState extends State<Activity1Page> {
                   final cover =
                       currentTag?.coverAsset ?? _tracks.first.coverAsset;
 
-                  // Larger tap targets on small screens
+                  
                   final isCompact = constraints.maxWidth < 420;
 
                   return Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Now Playing (appears only when playing)
+                      
                       _NowPlayingBadge(player: _player),
                       const SizedBox(height: 10),
 
-                      // Animated cover – fades/scales when track changes
+                      
                       AnimatedSwitcher(
   duration: const Duration(milliseconds: 220),
   switchInCurve: Curves.easeOutCubic,
@@ -181,7 +181,7 @@ class _Activity1PageState extends State<Activity1Page> {
     ),
   ),
   child: _HoverScale(
-    key: ValueKey(cover), // important: change key per track
+    key: ValueKey(cover), 
     scale: 1.02,
     child: ClipRRect(
       borderRadius: BorderRadius.circular(12),
@@ -196,7 +196,7 @@ class _Activity1PageState extends State<Activity1Page> {
 ),
                       const SizedBox(height: 14),
 
-                      // Animated title/artist
+                      
                       AnimatedSwitcher(
                         duration: const Duration(milliseconds: 180),
                         child: Column(
@@ -230,24 +230,24 @@ class _Activity1PageState extends State<Activity1Page> {
 
                       const SizedBox(height: 16),
 
-                      // >>> SLIM PROGRESS BAR (centered, not full width) <<<
+                      
                       Padding(
                         padding: const EdgeInsets.only(bottom: 12),
                         child: Align(
                           alignment: Alignment.center,
                           child: ConstrainedBox(
                             constraints:
-                                const BoxConstraints(maxWidth: 360), // slim
+                                const BoxConstraints(maxWidth: 360), 
                             child: _SlimProgressBar(player: _player),
                           ),
                         ),
                       ),
 
-                      // Controls: Shuffle, Previous, Play/Pause, Next, Open List (icon only)
+                      
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          // Shuffle
+                          
                           StreamBuilder<bool>(
                             stream: _player.shuffleModeEnabledStream,
                             builder: (context, snap) {
@@ -270,7 +270,7 @@ class _Activity1PageState extends State<Activity1Page> {
                             },
                           ),
 
-                          // Previous
+                          
                           _HoverScale(
                             child: IconButton(
                               tooltip: 'Previous',
@@ -284,7 +284,7 @@ class _Activity1PageState extends State<Activity1Page> {
                               },
                             ),
                           ),
-                          // Play / Pause
+                          
                           StreamBuilder<PlayerState>(
                             stream: _player.playerStateStream,
                             builder: (context, state) {
@@ -306,7 +306,7 @@ class _Activity1PageState extends State<Activity1Page> {
                               );
                             },
                           ),
-                          // Next
+                          
                           _HoverScale(
                             child: IconButton(
                               tooltip: 'Next',
@@ -320,7 +320,7 @@ class _Activity1PageState extends State<Activity1Page> {
                               },
                             ),
                           ),
-                          // Open Playlist (icon only)
+                          
                           _HoverScale(
                             child: IconButton(
                               tooltip: 'Open Playlist',
@@ -344,7 +344,7 @@ class _Activity1PageState extends State<Activity1Page> {
     );
   }
 
-  /// OPEN STATE: Full layout with left pane + detailed track list, Now Playing badge above list
+  
   Widget _buildWithList(BuildContext context, {Key? key}) {
     return LayoutBuilder(
       key: key,
@@ -367,7 +367,7 @@ class _Activity1PageState extends State<Activity1Page> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Now Playing badge above the list on wide screens
+                    
                     const Padding(
                       padding: EdgeInsets.fromLTRB(8, 8, 8, 4),
                       child: _NowPlayingBadgeStatic(),
@@ -495,7 +495,7 @@ class _LeftPane extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Visible only in OPEN state
+    
     final mq = MediaQuery.of(context);
     final pad = mq.size.width < 420 ? 12.0 : 16.0;
 
@@ -613,7 +613,7 @@ class _TrackList extends StatelessWidget {
               onTap: () => onTap(index),
               builder: (hovering) => Row(
                 children: [
-                  // Album cover with hover scale
+                  
                   ClipRRect(
                     borderRadius: BorderRadius.circular(8),
                     child: AnimatedScale(
@@ -630,7 +630,7 @@ class _TrackList extends StatelessWidget {
                   ),
                   const SizedBox(width: 14),
 
-                  // Title / Artist
+                  
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -705,7 +705,7 @@ class _HoverListItemState extends State<_HoverListItem> {
       cursor: kIsWeb ? SystemMouseCursors.click : MouseCursor.defer,
       child: InkWell(
         onTap: widget.onTap,
-        hoverColor: Colors.transparent, // we handle hover bg ourselves
+        hoverColor: Colors.transparent, 
         splashColor: Colors.white10,
         highlightColor: Colors.white10.withOpacity(0.2),
         child: AnimatedContainer(
@@ -729,7 +729,7 @@ class _HoverListItemState extends State<_HoverListItem> {
           child: AnimatedSlide(
             duration: const Duration(milliseconds: 140),
             curve: Curves.easeOut,
-            offset: _hover ? const Offset(0, -0.01) : Offset.zero, // subtle lift
+            offset: _hover ? const Offset(0, -0.01) : Offset.zero, 
             child: widget.builder(_hover),
           ),
         ),
@@ -755,7 +755,7 @@ class _BottomPlayerBar extends StatelessWidget {
     final isCompact = mq.size.width < 420;
 
     return Material(
-      color: Colors.black.withOpacity(0.4), // slightly translucent over bg
+      color: Colors.black.withOpacity(0.4), 
       child: SafeArea(
         top: false,
         child: Padding(
@@ -764,7 +764,7 @@ class _BottomPlayerBar extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Music/progress bar
+              
               StreamBuilder<Duration?>(
                 stream: player.durationStream,
                 builder: (context, durSnap) {
@@ -820,7 +820,7 @@ class _BottomPlayerBar extends StatelessWidget {
                 },
               ),
 
-              // Now Playing + Title + Artist (centered), below the music bar
+              
               const SizedBox(height: 6),
               _NowPlayingBadge(player: player),
               const SizedBox(height: 6),
@@ -858,7 +858,7 @@ class _BottomPlayerBar extends StatelessWidget {
                 },
               ),
 
-              // Centered control buttons
+              
               const SizedBox(height: 8),
               Wrap(
                 alignment: WrapAlignment.center,
@@ -955,7 +955,7 @@ class _BottomPlayerBar extends StatelessWidget {
   }
 }
 
-/// Slim, centered progress bar used in CLOSED view (above controls)
+
 class _SlimProgressBar extends StatelessWidget {
   final AudioPlayer player;
   const _SlimProgressBar({required this.player});
@@ -992,7 +992,7 @@ class _SlimProgressBar extends StatelessWidget {
                   style: const TextStyle(color: Colors.white70, fontSize: 11),
                 ),
                 SizedBox(
-                  width: 200, // slim fixed width
+                  width: 200, 
                   child: SliderTheme(
                     data: SliderTheme.of(context).copyWith(
                       trackHeight: 2.0,
@@ -1024,7 +1024,7 @@ class _SlimProgressBar extends StatelessWidget {
   }
 }
 
-/// Tiny pill that appears when a track is playing. No functionality; purely visual.
+
 class _NowPlayingBadge extends StatelessWidget {
   final AudioPlayer player;
   const _NowPlayingBadge({required this.player});
@@ -1048,7 +1048,7 @@ class _NowPlayingBadge extends StatelessWidget {
   }
 }
 
-/// Static version so we can reuse badge in the list header (no stream needed there)
+
 class _NowPlayingBadgeStatic extends StatelessWidget {
   const _NowPlayingBadgeStatic({super.key});
 
@@ -1080,7 +1080,7 @@ class _NowPlayingBadgeStatic extends StatelessWidget {
   }
 }
 
-/// Reusable hover scale wrapper for web/desktop polish.
+
 class _HoverScale extends StatefulWidget {
   final Widget child;
   final double scale;

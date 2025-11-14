@@ -3,12 +3,12 @@ import 'package:flame/game.dart';
 import 'maps/level1_map.dart';
 
 const Map<WeaponType, Color> kWeaponAccentColors = {
-  WeaponType.forcefield: Color(0xFF38BDF8), // cyan
-  WeaponType.holySword: Color(0xFFFACC15),  // yellow
-  WeaponType.reaperScythe: Color.fromARGB(255, 255, 136, 0), // red
-  WeaponType.machineGun: Color(0xFFA855F7), // purple
-  WeaponType.goldenGoose: Color(0xFF4ADE80), // green
-  WeaponType.holyWand: Color(0xFFFB7185), // pink
+  WeaponType.forcefield: Color(0xFF38BDF8), 
+  WeaponType.holySword: Color(0xFFFACC15),  
+  WeaponType.reaperScythe: Color.fromARGB(255, 255, 136, 0), 
+  WeaponType.machineGun: Color(0xFFA855F7), 
+  WeaponType.goldenGoose: Color(0xFF4ADE80), 
+  WeaponType.holyWand: Color(0xFFFB7185), 
 };
 
 class Level1Screen extends StatelessWidget {
@@ -39,7 +39,7 @@ class LevelUpOverlay extends StatelessWidget {
     final choices = game.currentWeaponChoices;
     return Stack(
       children: [
-        // Full black background
+        
         Positioned.fill(
           child: Container(
             color: Colors.black.withOpacity(0.35),
@@ -52,13 +52,13 @@ class LevelUpOverlay extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
               decoration: BoxDecoration(
                 color: const Color(0xFF020617),
-                borderRadius: BorderRadius.circular(8), // smaller = more pixel
+                borderRadius: BorderRadius.circular(8), 
                 border: Border.all(
-                  color: const Color(0xFF38BDF8), // cyan outer frame
+                  color: const Color(0xFF38BDF8), 
                   width: 3,
                 ),
                 boxShadow: const [
-                  // hard offset shadow → pixel-ish
+                  
                   BoxShadow(
                     color: Colors.black,
                     offset: Offset(0, 0),
@@ -69,7 +69,7 @@ class LevelUpOverlay extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Pixel-ish title
+                  
                   const Text(
                     'LEVEL UP!',
                     style: TextStyle(
@@ -96,7 +96,7 @@ class LevelUpOverlay extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 14),
-                  // Tiny "pixel" separator
+                  
                   Container(
                     height: 3,
                     width: 140,
@@ -158,7 +158,7 @@ class _WeaponCard extends StatelessWidget {
         margin: const EdgeInsets.all(6),
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          // Slight “pixel gradient” with weapon color
+          
           gradient: LinearGradient(
             colors: [
               accent.withOpacity(0.25),
@@ -173,7 +173,7 @@ class _WeaponCard extends StatelessWidget {
             width: 3,
           ),
           boxShadow: [
-            // hard offset shadow → retro
+            
             BoxShadow(
               color: Colors.black.withOpacity(0.9),
               offset: const Offset(3, 3),
@@ -184,7 +184,7 @@ class _WeaponCard extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Tiny colored bar at top
+            
             Container(
               height: 4,
               decoration: BoxDecoration(
@@ -194,18 +194,18 @@ class _WeaponCard extends StatelessWidget {
             ),
             const SizedBox(height: 6),
 
-            // Image
+            
             SizedBox(
               height: 56,
               child: Image.asset(
                 info.imagePath,
                 fit: BoxFit.contain,
-                filterQuality: FilterQuality.none, // more pixel-y
+                filterQuality: FilterQuality.none, 
               ),
             ),
             const SizedBox(height: 6),
 
-            // Weapon name
+            
             Text(
               info.name.toUpperCase(),
               textAlign: TextAlign.center,
@@ -225,7 +225,7 @@ class _WeaponCard extends StatelessWidget {
             ),
             const SizedBox(height: 2),
 
-            // Level label
+            
             Text(
               'LV. $nextLvl',
               style: TextStyle(
@@ -236,7 +236,7 @@ class _WeaponCard extends StatelessWidget {
             ),
             const SizedBox(height: 6),
 
-            // Description
+            
             Text(
               desc,
               textAlign: TextAlign.center,

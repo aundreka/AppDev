@@ -1,4 +1,4 @@
-// lib/activity2/home_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'level1_screen.dart';
@@ -7,7 +7,7 @@ import 'level3_screen.dart';
 
 
 
-// Global key for SharedPreferences
+
 const String kHighScoreKey = 'grimm_runner_high_score';
 
 class HomeScreen extends StatefulWidget {
@@ -71,7 +71,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       ),
       body: Stack(
         children: [
-          // Background gradient
+          
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
@@ -82,7 +82,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ),
           ),
 
-          // Subtle monster watermarks
+          
           Positioned(
             left: -24,
             bottom: size.height * 0.18,
@@ -120,7 +120,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ),
           ),
 
-          // Content
+          
           SafeArea(
             child: Center(
               child: ConstrainedBox(
@@ -176,7 +176,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       ),
                       const SizedBox(height: 24),
 
-                      // Level Cards
+                      
                       _LevelCard(
                         title: 'Level 1 — Little Red Riding Hood',
                         subtitle: 'Forest • Wolves • 3 Waves',
@@ -219,7 +219,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
                       const Spacer(),
 
-                      // Footer buttons
+                      
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -414,7 +414,7 @@ class _SafeImageAsset extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Ensure we always return a properly constrained widget
+    
     final container = SizedBox(
       width: width,
       height: width,
@@ -424,11 +424,11 @@ class _SafeImageAsset extends StatelessWidget {
         height: width,
         fit: fit,
         errorBuilder: (BuildContext context, Object error, StackTrace? stackTrace) {
-          // Always return a valid widget - never null
+          
           if (fallback != null) {
             return fallback!;
           }
-          // Return empty container with proper size
+          
           return const SizedBox.shrink();
         },
       ),

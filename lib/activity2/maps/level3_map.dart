@@ -7,10 +7,10 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flame_audio/flame_audio.dart';
 
-import '../lose2.dart';
-import '../win2.dart';
+import '../lose3.dart';
+import '../win3.dart';
 
-// ====================== CONSTANTS ======================
+
 
 const double kPanSpeed = 240;
 const double kFloorRadiusPx = 3000;
@@ -30,8 +30,8 @@ const double kEnemyTouchCooldown = 0.6;
 const double kEnemyNearRadiusMin = 320;
 const double kEnemyNearRadiusMax = 520;
 
-// ============ LEVEL 2 MONSTER SPRITES ============
-// (paths are relative to your Flame image root)
+
+
 const String TROLL_SPRITE_PATH =
     'activity2/monsters/level3/troll.png';
 const String ORC_SPRITE_PATH =
@@ -43,7 +43,7 @@ const String GIANT_SPRITE_PATH =
     'activity2/monsters/level3/giant.png';
 const String BOSS_SPRITE_PATH = 'activity2/monsters/level3/boss.png';
 
-// Weapons (unchanged)
+
 const String FIST_SPRITE_PATH = 'activity2/weapons/fist.png';
 const String GUN_BULLET_SPRITE_PATH = 'activity2/weapons/gun_fx.png';
 const String WAND_PROJECTILE_SPRITE_PATH = 'activity2/weapons/wand_fx.png';
@@ -183,10 +183,10 @@ String weaponDescription(WeaponType type, int nextLevel) {
   }
 }
 
-// ====================== PLAYER STATS ======================
+
 
 class PlayerStats {
-  // 🔼 Max level 15 now
+  
   static const int maxLevel = 15;
 
   int level;
@@ -288,7 +288,7 @@ class PlayerStats {
   }
 }
 
-// ====================== LEVEL 2 GAME ======================
+
 
 class Level3Map extends FlameGame {
   late final JoystickComponent _joystick;
@@ -321,13 +321,13 @@ class Level3Map extends FlameGame {
   late final ChunkManager _chunkManager;
   late final AuraRing _auraRing;
 
-  // 🔄 New timeline: 4 waves + boss (~4 minutes)
+  
   static const double kTimelineTotal = 240;
   static const List<double> kWaveFlags = [30, 90, 150, 210];
 
   double _t = 0;
 
-  // Wave timers
+  
   double _nextPreW1 = 1;
   double _nextW1 = 30;
   int _w1TicksLeft = 6;
@@ -384,26 +384,26 @@ class Level3Map extends FlameGame {
     await FlameAudio.bgm.initialize();
     await FlameAudio.audioCache.load('level3_theme.mp3');
 
-    // Floor
+    
     await images.load('activity2/maps/level3/floor.png');
     _floorImage = images.fromCache('activity2/maps/level3/floor.png');
     _floorSprite = Sprite(_floorImage);
     _floorTileW = _floorImage.width;
     _floorTileH = _floorImage.height;
 
-    // Decorations
+    
     for (final name in kDecorFilenames) {
       final path = 'activity2/maps/level3/assets/$name';
       await images.load(path);
       _spriteCache[name] = Sprite(images.fromCache(path));
     }
 
-    // Player sprite
+    
     await images.load('activity2/players/level3.png');
     final playerSprite =
         Sprite(images.fromCache('activity2/players/level3.png'));
 
-    // Enemies
+    
     await _safeLoadSprite(EnemyKind.troll, TROLL_SPRITE_PATH);
     await _safeLoadSprite(EnemyKind.orc, ORC_SPRITE_PATH);
     await _safeLoadSprite(EnemyKind.golem, GOLEM_SPRITE_PATH);
@@ -411,7 +411,7 @@ class Level3Map extends FlameGame {
     await _safeLoadSprite(EnemyKind.giant, GIANT_SPRITE_PATH);
     await _safeLoadSprite(EnemyKind.boss, BOSS_SPRITE_PATH);
 
-    // Projectiles
+    
     await images.load(FIST_SPRITE_PATH);
     fistSprite = Sprite(images.fromCache(FIST_SPRITE_PATH));
     await images.load(GUN_BULLET_SPRITE_PATH);
@@ -420,7 +420,7 @@ class Level3Map extends FlameGame {
     wandProjectileSprite =
         Sprite(images.fromCache(WAND_PROJECTILE_SPRITE_PATH));
 
-    // Weapon icons
+    
     await _loadWeaponIcon(WeaponType.forcefield, FORCEFIELD_ICON_PATH);
     await _loadWeaponIcon(WeaponType.holySword, HOLY_SWORD_ICON_PATH);
     await _loadWeaponIcon(WeaponType.reaperScythe, REAPER_SCYTHE_ICON_PATH);
@@ -701,7 +701,7 @@ class Level3Map extends FlameGame {
     }
   }
 
-  // ===================== SPAWNS (LEVEL 2 WAVES) =====================
+  
 
   void _runSpawns() {
     Vector2 spawnNear() {
@@ -715,73 +715,67 @@ class Level3Map extends FlameGame {
       return playerWorldCenter + offset;
     }
 
-    // -------- PRE-WAVE 1 (0–30s): light lollipop spawns --------
+    
     while (_t >= _nextPreW1 && _t < 30) {
       _nextPreW1 += 2;
       _spawn(EnemyKind.troll, spawnNear());
     }
 
-    // -------- WAVE 1 (30–60s): lollipop swarm --------
+    
     while (_t >= _nextW1 && _t < 60 && _w1TicksLeft > 0) {
       _nextW1 += 4;
       _w1TicksLeft--;
       for (int i = 0; i < 8; i++) {
-        _spawn(EnemyKind.troll, spawnNear());
         _spawn(EnemyKind.orc, spawnNear());
         
       }
     }
 
-    // -------- PRE-WAVE 2 (60–90s): mix lollipop + cupcake --------
+    
     while (_t >= _nextPreW2 && _t < 90) {
       _nextPreW2 += 1;
       _spawn(EnemyKind.orc, spawnNear());
-            _spawn(EnemyKind.golem, spawnNear());
+      _spawn(EnemyKind.troll, spawnNear());
 
     }
 
-    // -------- WAVE 2 (90–120s): cupcake wave --------
+    
     while (_t >= _nextW2 && _t < 120 && _w2TicksLeft > 0) {
       _nextW2 += 3;
       _w2TicksLeft--;
       for (int i = 0; i < 8; i++) {
-        _spawn(EnemyKind.golem, spawnNear());
-      _spawn(EnemyKind.wyvern, spawnNear());
-              _spawn(EnemyKind.orc, spawnNear());
+       _spawn(EnemyKind.golem, spawnNear());
 
       }
     }
 
-    // -------- PRE-WAVE 3 (120–150s): cupcake + cake --------
+    
     while (_t >= _nextPreW3 && _t < 150) {
       _nextPreW3 += 1;
-      _spawn(EnemyKind.golem, spawnNear());
       _spawn(EnemyKind.wyvern, spawnNear());
     }
 
-    // -------- WAVE 3 (150–180s): cake wave --------
+    
     while (_t >= _nextW3 && _t < 180 && _w3TicksLeft > 0) {
       _nextW3 += 3;
       _w3TicksLeft--;
       for (int i = 0; i < 8; i++) {
         _spawn(EnemyKind.wyvern, spawnNear());
         _spawn(EnemyKind.giant, spawnNear());
-                _spawn(EnemyKind.golem, spawnNear());
-              _spawn(EnemyKind.orc, spawnNear());
 
       }
     }
 
-    // -------- PRE-WAVE 4 (180–210s): cake + icecream --------
+    
     while (_t >= _nextPreW4 && _t < 210) {
       _nextPreW4 += 1;
       _spawn(EnemyKind.wyvern, spawnNear());
       _spawn(EnemyKind.giant, spawnNear());
-              _spawn(EnemyKind.golem, spawnNear());
+      _spawn(EnemyKind.golem, spawnNear());
 
     }
 
-    // -------- Boss at 240s --------
+    
     if (!_bossSpawned && _t >= 210) {
       _bossSpawned = true;
       _spawn(EnemyKind.boss, spawnNear());
@@ -1085,21 +1079,21 @@ class Level3Map extends FlameGame {
   }
 }
 
-// ====================== ENEMIES (LEVEL 2) ======================
+
 
 enum EnemyKind { troll, orc, golem, wyvern, giant, boss }
 
 class EnemyStats {
   final double hp;
   final double damage;
-  final double range; // in "units"
-  final double speed; // px/s
-  final int exp; // exp/score on death
+  final double range; 
+  final double speed; 
+  final int exp; 
 
   const EnemyStats(this.hp, this.damage, this.range, this.speed, this.exp);
 }
 
-// Tuned to scale up: lollipop < cupcake < cake < icecream < boss
+
 const Map<EnemyKind, EnemyStats> kEnemyStats = {
   EnemyKind.troll: EnemyStats(40, 10, 1, 70, 10),
   EnemyKind.orc: EnemyStats(140, 20, 1.5, 80, 35),
@@ -1122,7 +1116,7 @@ class Enemy extends PositionComponent with HasGameRef<Level3Map> {
   Enemy(this.kind, Vector2 pos)
       : super(
           position: pos,
-          size: Vector2.all(kind == EnemyKind.boss ? 250 : 110),
+          size: Vector2.all(kind == EnemyKind.boss ? 300 : 190),
           anchor: Anchor.center,
         );
 
@@ -1247,7 +1241,7 @@ class Enemy extends PositionComponent with HasGameRef<Level3Map> {
   }
 }
 
-// ============================ FIST PROJECTILE ============================
+
 
 class FistProjectile extends PositionComponent with HasGameRef<Level3Map> {
   final Vector2 start;
@@ -1305,18 +1299,18 @@ class FistProjectile extends PositionComponent with HasGameRef<Level3Map> {
   }
 }
 
-// ============================ WORLD ROOT ============================
+
 
 class WorldLayer extends World {}
 
-// ============================ HUD PLAYER ============================
+
 
 class HudPlayer extends SpriteComponent {
   HudPlayer({required Sprite sprite})
       : super(sprite: sprite, size: Vector2.all(120), anchor: Anchor.center);
 }
 
-// ============================ HUD HP BAR ============================
+
 
 class HudHpBar extends PositionComponent {
   final PlayerStats Function() statsProvider;
@@ -1406,7 +1400,7 @@ class HudHpBar extends PositionComponent {
   }
 }
 
-// ============================ HUD LEVEL BADGE ============================
+
 
 class HudLevelBadge extends PositionComponent {
   final PlayerStats Function() statsProvider;
@@ -1468,7 +1462,7 @@ class HudLevelBadge extends PositionComponent {
   }
 }
 
-// ============================ ENEMY HP BAR ============================
+
 
 class EnemyHpBar extends PositionComponent {
   final Enemy enemy;
@@ -1526,7 +1520,7 @@ class EnemyHpBar extends PositionComponent {
   }
 }
 
-// ============================ HUD WAVE METER ============================
+
 
 class HudWaveMeter extends PositionComponent {
   final double width;
@@ -1618,7 +1612,7 @@ class HudWaveMeter extends PositionComponent {
   }
 }
 
-// ============================ HUD WEAPON ICONS ============================
+
 
 class HudWeaponIcons extends PositionComponent with HasGameRef<Level3Map> {
   final PlayerStats Function() statsProvider;
@@ -1738,7 +1732,7 @@ class HudWeaponIcons extends PositionComponent with HasGameRef<Level3Map> {
   }
 }
 
-// ============================ FLOOR GRID ============================
+
 
 class FloorGrid extends Component {
   final Sprite floorSprite;
@@ -1855,7 +1849,7 @@ class ChunkManager extends Component {
   }
 }
 
-/* ============================ CHUNK (ASSETS) ============================ */
+
 
 class Chunk extends PositionComponent {
   final int cx, cy;
@@ -1943,7 +1937,7 @@ class Chunk extends PositionComponent {
 }
 
 class AuraRing extends PositionComponent with HasGameRef<Level3Map> {
-  double _t = 0; // time accumulator
+  double _t = 0; 
 
   AuraRing() : super(anchor: Anchor.center);
 
@@ -1952,7 +1946,7 @@ class AuraRing extends PositionComponent with HasGameRef<Level3Map> {
     super.update(dt);
     _t += dt;
 
-    // Always follow the player
+    
     position = gameRef.playerWorldCenter;
   }
 
@@ -1964,23 +1958,23 @@ class AuraRing extends PositionComponent with HasGameRef<Level3Map> {
     final ffLvl = stats.weaponLevels[WeaponType.forcefield] ?? 0;
     final scLvl = stats.weaponLevels[WeaponType.reaperScythe] ?? 0;
 
-    // No forcefield / scythe → no ring
+    
     if (ffLvl <= 0 && scLvl <= 0) return;
 
-    // Base radius from current range
+    
     final baseRadius = stats.range * kUnitPx;
 
-    // --- Pulse animation ---
-    // One full pulse every ~2 seconds
-    const pulseSpeed = 2 * pi / 2.0; // radians per second
-    final s = sin(_t * pulseSpeed);  // -1..1
+    
+    
+    const pulseSpeed = 2 * pi / 2.0; 
+    final s = sin(_t * pulseSpeed);  
 
-    // Scale radius between ~0.95x and 1.05x
+    
     final scale = 1.0 + 0.05 * s;
     final radius = baseRadius * scale;
 
-    // Opacity between ~0.12 and ~0.28
-    final opacity = 0.8 + 0.08 * ((s + 1) / 2); // map -1..1 → 0..1
+    
+    final opacity = 0.8 + 0.08 * ((s + 1) / 2); 
 
     Color c;
     if (ffLvl > 0 && scLvl > 0) {

@@ -24,7 +24,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   late final AudioPlayer _bgm;
   bool _muted = false;
 
-  // Precompute light particle field once (no per-frame RNG)
+  
   final List<_Particle> _particles = [];
 
   @override
@@ -38,7 +38,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
     _houseRise = CurvedAnimation(parent: _intro, curve: const Interval(0.25, 1.0, curve: Curves.easeOutCubic));
 
-    // Slightly slower loops -> fewer visual changes per second
+    
     _clouds = AnimationController(vsync: this, duration: const Duration(seconds: 28))..repeat();
     _grassWind = AnimationController(vsync: this, duration: const Duration(seconds: 4))..repeat();
     _titleGlow = AnimationController(vsync: this, duration: const Duration(seconds: 3))..repeat();
@@ -50,13 +50,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       _intro.forward();
 
-      // Precaching avoids jank the first time these draw
+      
       final ctx = context;
       precacheImage(const AssetImage('assets/house.png'), ctx);
-      precacheImage(const AssetImage('assets/opening.mp3'), ctx); // harmless if not an image
+      precacheImage(const AssetImage('assets/opening.mp3'), ctx); 
     });
 
-    // Background music
+    
     _bgm = AudioPlayer();
     _unawaited(_bgm.setAudioSource(AudioSource.asset('assets/opening.mp3')));
     _unawaited(_bgm.setLoopMode(LoopMode.one));
@@ -81,10 +81,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     final isNarrow = size.width < 900;
     final horizonY = size.height * (isNarrow ? 0.53 : 0.55);
 
-    // Prepare particle field sized to screen only once
+    
     if (_particles.isEmpty) {
       final rng = math.Random(42);
-      final count = size.width < 500 ? 16 : 24; // fewer on phones
+      final count = size.width < 500 ? 16 : 24; 
       for (int i = 0; i < count; i++) {
         _particles.add(
           _Particle(
@@ -103,7 +103,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         children: [
           Positioned.fill(child: DecoratedBox(decoration: AppDecorations.sky())),
 
-          // Particles: extremely light now, only paints tiny circles
+          
           RepaintBoundary(
             child: AnimatedBuilder(
               animation: _clouds,
@@ -111,7 +111,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             ),
           ),
 
-          // Grass: painter complexity reduced & isolated
+          
           Positioned(
             left: 0,
             right: 0,
@@ -133,7 +133,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             ),
           ),
 
-          // House + ground shadow
+          
           Align(
             alignment: Alignment(0, isNarrow ? 0.20 : 0.16),
             child: AnimatedBuilder(
@@ -141,7 +141,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               builder: (_, __) {
                 final rise = lerpDouble(80, 0, _houseRise.value)!;
                 final opacity = CurvedAnimation(parent: _intro, curve: const Interval(0.35, 1.0, curve: Curves.easeOut)).value;
-                final houseW = math.min(size.width * 0.9, 1600.0); // downscale target to avoid huge textures
+                final houseW = math.min(size.width * 0.9, 1600.0); 
 
                 return Opacity(
                   opacity: opacity,
@@ -158,7 +158,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                             decoration: AppDecorations.groundShadowEllipse(),
                           ),
                         ),
-                        // Downscale decode with cacheWidth to reduce GPU upload size
+                        
                         Image.asset(
                           'assets/house.png',
                           fit: BoxFit.contain,
@@ -174,7 +174,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             ),
           ),
 
-          // Floating buttons (unchanged visuals)
+          
           Align(
             alignment: const Alignment(0, 0.88),
             child: AnimatedBuilder(
@@ -226,7 +226,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             ),
           ),
 
-          // Title stack
+          
           Positioned.fill(
             child: IgnorePointer(
               child: Column(
@@ -250,7 +250,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             ),
           ),
 
-          // Side Japanese text (glow anim only affects opacity -> cheap)
+          
           Align(
             alignment: isNarrow ? const Alignment(-0.96, -0.82) : const Alignment(-0.78, -0.75),
             child: AnimatedBuilder(
@@ -277,7 +277,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             ),
           ),
 
-          // Mute button
+          
           Positioned(
             right: 14,
             top: 14,
@@ -290,7 +290,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             ),
           ),
 
-          // Cloud shadow (lightweight gradient ovals, isolated)
+          
           RepaintBoundary(
             child: AnimatedBuilder(
               animation: _clouds,
@@ -309,9 +309,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
 void _unawaited(Future<void> f) {}
 
-/// ------------------------------------------------------------
-/// Lightweight particles (precomputed)
-/// ------------------------------------------------------------
+
+
+
 class _Particle {
   final double x, y, r, drift;
   const _Particle({required this.x, required this.y, required this.r, required this.drift});
@@ -345,7 +345,7 @@ class _ParticlesPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final paint = Paint()..color = Colors.white.withOpacity(0.10);
     for (final p in particles) {
-      // simple horizontal drift
+      
       final x = (p.x + progress * p.drift) % size.width;
       canvas.drawCircle(Offset(x, p.y), p.r, paint);
     }
@@ -354,9 +354,9 @@ class _ParticlesPainter extends CustomPainter {
   bool shouldRepaint(covariant _ParticlesPainter old) => old.progress != progress || old.particles != particles;
 }
 
-/// ------------------------------------------------------------
-/// Cloud shadow (gradient blobs, no expensive MaskFilter blur)
-/// ------------------------------------------------------------
+
+
+
 class _CloudShadowLite extends StatelessWidget {
   final double progress;
   final double topFraction;
@@ -393,7 +393,7 @@ class _CloudShadowLitePainter extends CustomPainter {
       ..shader = RadialGradient(
         colors: [c.withOpacity(a), c.withOpacity(0)],
         stops: const [0.0, 1.0],
-      ).createShader(Rect.fromCircle(center: const Offset(0, 0), radius: 1)); // shader updated per oval
+      ).createShader(Rect.fromCircle(center: const Offset(0, 0), radius: 1)); 
 
     void drawOval(Offset center, Size s, Color color, double alpha) {
       final rect = Rect.fromCenter(center: center, width: s.width, height: s.height);
@@ -417,9 +417,9 @@ class _CloudShadowLitePainter extends CustomPainter {
   bool shouldRepaint(covariant _CloudShadowLitePainter oldDelegate) => false;
 }
 
-/// ------------------------------------------------------------
-/// Grass (lighter painter)
-/// ------------------------------------------------------------
+
+
+
 class _GrassLitePainter extends CustomPainter {
   final double windPhase;
   final double screenWidth;
@@ -439,9 +439,9 @@ class _GrassLitePainter extends CustomPainter {
   void _paintLayer(Canvas canvas, Size size, int layer, Color base, double heightMul, double densityMul) {
     final rng = math.Random(13 * layer + 7);
     final baseY = size.height;
-    final step = 7.0 / densityMul; // bigger step => fewer blades
+    final step = 7.0 / densityMul; 
     for (double x = -60; x < size.width + 60; x += step + rng.nextDouble() * 2.0) {
-      if (rng.nextDouble() < 0.16) continue; // sparser
+      if (rng.nextDouble() < 0.16) continue; 
       final clump = 2 + rng.nextInt(4);
       for (int i = 0; i < clump; i++) {
         final bladeX = x + (i - clump / 2) * (1.2 + rng.nextDouble() * 1.4);
@@ -461,7 +461,7 @@ class _GrassLitePainter extends CustomPainter {
 
     final path = Path();
     path.moveTo(x - width / 2, baseY);
-    const segments = 4; // fewer segments => cheaper path
+    const segments = 4; 
     for (int i = 1; i <= segments; i++) {
       final t = i / segments;
       final y = baseY - height * t;
@@ -489,9 +489,9 @@ class _GrassLitePainter extends CustomPainter {
       old.windPhase != windPhase || old.densityBoost != densityBoost;
 }
 
-/// ------------------------------------------------------------
-/// Buttons + Mute
-/// ------------------------------------------------------------
+
+
+
 class _EnhancedPillButton extends StatefulWidget {
   final String label;
   final String route;

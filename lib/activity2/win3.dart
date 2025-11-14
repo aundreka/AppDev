@@ -1,9 +1,9 @@
-// lib/activity2/win.dart
+
 import 'package:flutter/material.dart';
 import 'package:flame_audio/flame_audio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'home_screen.dart'; // this has kHighScoreKey
+import 'home_screen.dart'; 
 
 class WinScreen extends StatefulWidget {
   final int highScore;
@@ -85,7 +85,7 @@ class _WinScreenState extends State<WinScreen> {
 
              
 
-              // BACK HOME
+              
               TextButton(
                 onPressed: () {
                   Navigator.of(context).pushReplacement(

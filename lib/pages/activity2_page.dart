@@ -1,4 +1,4 @@
-// lib/pages/activity2_page.dart
+
 import 'package:flutter/material.dart';
 import '../activity2/home_screen.dart';
 

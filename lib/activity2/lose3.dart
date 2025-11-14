@@ -1,4 +1,4 @@
-// lib/activity2/lose.dart
+
 import 'package:flutter/material.dart';
 import 'level3_screen.dart'; 
 import 'home_screen.dart';
@@ -52,7 +52,7 @@ class _LoseScreenState extends State<LoseScreen> {
                 ),
               ),
               const SizedBox(height: 32),
-              // TRY AGAIN
+              
               ElevatedButton(
                 onPressed: () {
                   Navigator.of(context).pushReplacement(
@@ -76,12 +76,12 @@ class _LoseScreenState extends State<LoseScreen> {
                 child: const Text('TRY AGAIN'),
               ),
               const SizedBox(height: 12),
-              // BACK HOME
+              
               TextButton(
                 onPressed: () {
                   Navigator.of(context).pushReplacement(
                     MaterialPageRoute(
-                      builder: (_) => const HomeScreen(), // 👈 your home widget
+                      builder: (_) => const HomeScreen(), 
                     ),
                   );
                 },
